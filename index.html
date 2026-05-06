@@ -1,146 +1,227 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>UA TETRIS 🗿</title>
-  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <style>
-    body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-    #ton-connect-button { margin-bottom: 10px; min-height: 44px; z-index: 100; }
-    .menu-btn { width: 260px; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
-    #payButton { background: #0088cc; color: white; display: none; }
-    .top-btn { background: #ffd700; color: #000; }
-    
-    .header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%; }
-    .jackpot-box { background: linear-gradient(45deg, #1a1a1a, #2a2a2a); border: 2px solid #ffd700; padding: 10px; border-radius: 12px; text-align: center; width: 240px; position: relative; }
-    .stats-row { display: flex; gap: 10px; }
-    .stat-box { background: #222; padding: 8px 15px; border-radius: 8px; border: 1px solid #333; min-width: 90px; text-align: center; }
-    .label { font-size: 10px; color: #aaa; text-transform: uppercase; }
-    .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
-    .jackpot-value { font-size: 22px; color: #ffd700; font-weight: 900; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UA TETRIS 🗿</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; height: 100vh; }
+        
+        /* Кнопка гаманця завжди зверху */
+        #ton-connect-button { margin-bottom: 10px; min-height: 44px; width: 100%; display: flex; justify-content: center; z-index: 100; }
+        
+        .menu-btn { width: 260px; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
+        #payButton { background: #0088cc; color: white; display: none; }
+        .top-btn { background: #ffd700; color: #000; }
+        
+        .header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%; }
+        .jackpot-box { background: linear-gradient(45deg, #1a1a1a, #2a2a2a); border: 2px solid #ffd700; padding: 10px; border-radius: 12px; text-align: center; width: 240px; position: relative; }
+        .stats-row { display: flex; gap: 10px; }
+        .stat-box { background: #222; padding: 8px 15px; border-radius: 8px; border: 1px solid #333; min-width: 90px; text-align: center; }
+        .label { font-size: 10px; color: #aaa; text-transform: uppercase; }
+        .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
+        .jackpot-value { font-size: 22px; color: #ffd700; font-weight: 900; }
 
-    canvas { border: 3px solid #333; background: #000; width: 240px; height: 400px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    .controls { display: grid; grid-template-columns: repeat(3, 65px); gap: 10px; margin-top: 15px; }
-    .btn { background: #333; border: 1px solid #444; color: white; width: 65px; height: 65px; border-radius: 15px; font-size: 24px; display: flex; align-items: center; justify-content: center; active: background: #555; }
-    
-    .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .content { background: #1a1a1a; padding: 25px; border-radius: 20px; width: 90%; max-width: 300px; text-align: center; border: 2px solid #ffd700; }
-    .q-mark { position: absolute; right: 10px; top: 10px; cursor: pointer; font-size: 14px; background: #333; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffd700; color: #ffd700; }
-  </style>
+        canvas { border: 3px solid #333; background: #000; width: 240px; height: 400px; border-radius: 10px; }
+        .controls { display: grid; grid-template-columns: repeat(3, 65px); gap: 10px; margin-top: 15px; }
+        .btn { background: #333; border: 1px solid #444; color: white; width: 65px; height: 65px; border-radius: 15px; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        
+        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .content { background: #1a1a1a; padding: 25px; border-radius: 20px; width: 90%; max-width: 300px; text-align: center; border: 2px solid #ffd700; }
+        .q-mark { position: absolute; right: 10px; top: 10px; cursor: pointer; font-size: 14px; background: #333; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffd700; color: #ffd700; }
+    </style>
 </head>
 <body>
 
-  <div id="ton-connect-button"></div>
-  
-  <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 VIP Level (0.01 TON)</button>
-  <button class="menu-btn top-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
+    <div id="ton-connect-button"></div>
+    
+    <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 VIP Level (0.01 TON)</button>
+    <button class="menu-btn top-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
 
-  <div class="header">
-    <div class="jackpot-box">
-        <div class="q-mark" onclick="toggleOverlay('rulesBox', true)">?</div>
-        <div class="label" style="color: #ffd700;">Призовий фонд</div>
-        <div id="jackpot" class="jackpot-value">0.00 TON</div>
+    <div class="header">
+        <div class="jackpot-box">
+            <div class="q-mark" onclick="toggleOverlay('rulesBox', true)">?</div>
+            <div class="label" style="color: #ffd700;">Призовий фонд</div>
+            <div id="jackpot" class="jackpot-value">0.00 TON</div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
+            <div class="stat-box"><div class="label">Рекорд</div><div id="best" class="value">0</div></div>
+        </div>
     </div>
-    <div class="stats-row">
-        <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
-        <div class="stat-box"><div class="label">Рекорд</div><div id="best" class="value">0</div></div>
+
+    <canvas id="tetris" width="240" height="400"></canvas>
+
+    <div class="controls">
+        <div class="btn" onclick="playerMove(-1)">⬅️</div>
+        <div class="btn" onclick="playerRotate()">🔄</div>
+        <div class="btn" onclick="playerMove(1)">➡️</div>
+        <div></div>
+        <div class="btn" onclick="playerDrop()">⬇️</div>
+        <div></div>
     </div>
-  </div>
 
-  <canvas id="tetris" width="240" height="400"></canvas>
-
-  <div class="controls">
-    <div></div><div class="btn" onclick="playerRotate()">🔄</div><div></div>
-    <div class="btn" onclick="playerMove(-1)">⬅️</div>
-    <div class="btn" onclick="playerDrop()">⬇️</div>
-    <div class="btn" onclick="playerMove(1)">➡️</div>
-  </div>
-
-  <div id="rulesBox" class="overlay">
-    <div class="content">
-      <h3 style="color:#ffd700;">📜 ПРАВИЛА</h3>
-      <p style="text-align: left; font-size: 14px; line-height: 1.5;">Всі VIP-внески йдуть у фонд. Щонеділі ТОП-3 гравців отримують виплати: 50%, 25% та 15% від банку.</p>
-      <button class="menu-btn top-btn" onclick="toggleOverlay('rulesBox', false)">OK</button>
+    <div id="rulesBox" class="overlay">
+        <div class="content">
+            <h3 style="color:#ffd700;">📜 ПРАВИЛА</h3>
+            <p style="text-align: left; font-size: 14px; line-height: 1.5;">Внески VIP йдуть у фонд. Щонеділі ТОП-3 гравців отримують: 50%, 25% та 15% банку.</p>
+            <button class="menu-btn top-btn" onclick="toggleOverlay('rulesBox', false)">OK</button>
+        </div>
     </div>
-  </div>
 
-  <div id="gameOverBox" class="overlay">
-    <div class="content">
-      <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
-      <p style="font-size: 20px;">Рахунок: <span id="finalScore">0</span></p>
-      <input type="text" id="pName" placeholder="Введіть нік" style="padding:12px; width:100%; border-radius:8px; border:none; margin-bottom:10px; box-sizing: border-box;">
-      <button class="menu-btn top-btn" onclick="saveRecord()">ЗБЕРЕГТИ</button>
-      <button onclick="location.reload()" style="background:none; color:#aaa; border:none; margin-top:15px; cursor:pointer;">Спробувати ще раз</button>
+    <div id="gameOverBox" class="overlay">
+        <div class="content">
+            <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
+            <p>Рахунок: <span id="finalScore">0</span></p>
+            <input type="text" id="pName" placeholder="Твій нік" style="padding:10px; width:80%; margin-bottom:10px;">
+            <button class="menu-btn top-btn" onclick="saveRecord()">ЗБЕРЕГТИ</button>
+            <button onclick="location.reload()" style="background:none; color:#aaa; border:none; margin-top:10px;">Ще раз</button>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // --- ПІДКЛЮЧЕННЯ TON ---
-    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-        manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
-        buttonRootId: 'ton-connect-button'
-    });
-
-    tonConnectUI.onStatusChange(wallet => {
-        document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
-    });
-
-    const _supabase = window.supabase.createClient('https://etwbvrrbflvyxkvetsir.supabase.co', 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E');
-
-    async function updateJackpot() {
-        try {
-            const res = await fetch('https://toncenter.com/api/v2/getAddressInformation?address=UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw');
-            const data = await res.json();
-            if (data.ok) document.getElementById('jackpot').innerText = (data.result.balance / 1e9).toFixed(2) + " TON";
-        } catch (e) { console.error(e); }
-    }
-    updateJackpot();
-
-    function toggleOverlay(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-
-    // --- ІГРОВА ЛОГІКА ТЕТРІСУ ---
-    const canvas = document.getElementById('tetris');
-    const context = canvas.getContext('2d');
-    context.scale(20, 20);
-
-    function createPiece(type) {
-        if (type === 'I') return [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]];
-        if (type === 'L') return [[0, 2, 0], [0, 2, 0], [0, 2, 2]];
-        if (type === 'J') return [[0, 3, 0], [0, 3, 0], [3, 3, 0]];
-        if (type === 'O') return [[4, 4], [4, 4]];
-        if (type === 'Z') return [[5, 5, 0], [0, 5, 5], [0, 0, 0]];
-        if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
-        if (type === 'T') return [[0, 7, 0], [7, 7, 7], [0, 0, 0]];
-    }
-
-    const colors = [null, '#00f0f0', '#f0a000', '#0000f0', '#f0f000', '#f00000', '#00f000', '#a000f0'];
-    const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-
-    function draw() {
-        context.fillStyle = '#000';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        drawMatrix(arena, {x: 0, y: 0});
-        drawMatrix(player.matrix, player.pos);
-    }
-
-    function drawMatrix(matrix, offset) {
-        matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value !== 0) {
-                    context.fillStyle = colors[value];
-                    context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                    context.strokeStyle = '#000';
-                    context.lineWidth = 0.05;
-                    context.strokeRect(x + offset.x, y + offset.y, 1, 1);
-                }
-            });
+    <script>
+        // Ініціалізація гаманця
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-button'
         });
-    }
 
-    function collide(arena, player) {
-        const [m, o] = [player.matrix, player.pos];
-        for (let y = 0; y < m.length; ++y) {
-            for (let x = 0; x < m[y].length; ++x) {
+        tonConnectUI.onStatusChange(wallet => {
+            document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
+        });
+
+        // Ініціалізація ігрового поля
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        context.scale(20, 20);
+
+        function createPiece(type) {
+            if (type === 'I') return [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]];
+            if (type === 'L') return [[0, 2, 0], [0, 2, 0], [0, 2, 2]];
+            if (type === 'J') return [[0, 3, 0], [0, 3, 0], [3, 3, 0]];
+            if (type === 'O') return [[4, 4], [4, 4]];
+            if (type === 'Z') return [[5, 5, 0], [0, 5, 5], [0, 0, 0]];
+            if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+            if (type === 'T') return [[0, 7, 0], [7, 7, 7], [0, 0, 0]];
+        }
+
+        const colors = [null, '#00f0f0', '#f0a000', '#0000f0', '#f0f000', '#f00000', '#00f000', '#a000f0'];
+        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
+        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
+        function arenaSweep() {
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) {
+                    if (arena[y][x] === 0) continue outer;
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                player.score += 10;
+            }
+            document.getElementById('score').innerText = player.score;
+        }
+
+        window.playerDrop = function() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        };
+
+        window.playerMove = function(dir) {
+            player.pos.x += dir;
+            if (collide(arena, player)) player.pos.x -= dir;
+        };
+
+        window.playerRotate = function() {
+            const pos = player.pos.x;
+            let offset = 1;
+            const matrix = player.matrix;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            matrix.forEach(row => row.reverse());
+            while (collide(arena, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > matrix[0].length) {
+                    player.pos.x = pos;
+                    return;
+                }
+            }
+        };
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            if (collide(arena, player)) {
+                document.getElementById('finalScore').innerText = player.score;
+                toggleOverlay('gameOverBox', true);
+            }
+        }
+
+        let dropCounter = 0;
+        let lastTime = 0;
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            dropCounter += deltaTime;
+            if (dropCounter > 1000) playerDrop();
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function toggleOverlay(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+
+        // Початок гри
+        playerReset();
+        update();
+    </script>
+</body>
+</html>
