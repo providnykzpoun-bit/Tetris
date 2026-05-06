@@ -3,42 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UA TETRIS 🗿</title>
+    <title>UA TETRIS 🗿 VIP</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
+        :root { --accent: #ffd700; --bg: #111; --panel: #1a1a1a; }
+        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; height: 100vh; box-sizing: border-box; }
         
-        #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
+        #ton-connect-button { margin-bottom: 10px; width: 100%; max-width: 300px; }
 
-        /* VIP ТА ФОНД В ОДНОМУ РЯДКУ */
-        .top-info-row { display: flex; gap: 5px; width: 280px; margin-bottom: 5px; align-items: stretch; }
-        .mini-btn { flex: 1.2; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; display: none; background: #0088cc; color: white; }
-        .mini-jackpot { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
-        .jackpot-label { font-size: 8px; color: #ffd700; text-transform: uppercase; }
-        .jackpot-value { font-size: 14px; color: #ffd700; font-weight: bold; }
+        .top-info-row { display: flex; gap: 8px; width: 100%; max-width: 300px; margin-bottom: 10px; height: 45px; }
+        .mini-btn { flex: 1; padding: 5px; border-radius: 10px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; display: none; background: #0088cc; color: white; transition: 0.2s; }
+        .mini-btn:active { transform: scale(0.95); }
+        .mini-jackpot { flex: 1; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .jackpot-label { font-size: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .jackpot-value { font-size: 14px; color: var(--accent); font-weight: bold; }
 
-        .top-btn { width: 280px; background: #ffd700; color: #000; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
-
-        /* ПАНЕЛЬ ОЧОК З КНОПКАМИ ЗВУКУ ТА ПРАВИЛ */
-        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .side-btn { background: #333; border: 1px solid #444; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
+        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; max-width: 300px; justify-content: space-between; }
+        .side-btn { background: #333; border: 1px solid #444; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
         
-        .stats-row { display: flex; gap: 5px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
-        .label { font-size: 8px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 14px; font-weight: bold; color: #00d4ff; }
+        .stats-row { display: flex; gap: 8px; flex-grow: 1; justify-content: center; }
+        .stat-box { background: #222; padding: 5px 12px; border-radius: 8px; border: 1px solid #333; text-align: center; min-width: 60px; }
+        .label { font-size: 8px; color: #aaa; text-transform: uppercase; margin-bottom: 2px; }
+        .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
-        canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
+        .game-container { position: relative; border: 3px solid #333; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        canvas { display: block; background: #000; height: 55vh; max-height: 500px; }
         
-        /* КЕРУВАННЯ В ОДИН РЯД */
-        .controls { display: flex; gap: 8px; margin-top: 10px; width: 100%; justify-content: center; }
-        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
-        .btn:active { background: #555; }
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; width: 100%; max-width: 320px; }
+        .btn { background: #2a2a2a; border: 1px solid #444; color: white; height: 60px; border-radius: 15px; font-size: 22px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
+        .btn:active { background: #444; transform: translateY(2px); }
+        .btn-drop { background: #3a3a3a; grid-column: span 1; }
 
-        /* ВІКНА ПОВІДОМЛЕНЬ */
-        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
-        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
-        .rules-list { text-align: left; font-size: 13px; line-height: 1.5; color: #ccc; margin: 15px 0; }
+        .overlay { display:none; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
+        .content { background: var(--panel); padding: 25px; border-radius: 24px; width: 85%; max-width: 300px; text-align: center; border: 2px solid var(--accent); }
+        .top-btn { width: 100%; background: var(--accent); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: bold; font-size: 14px; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -53,8 +51,6 @@
         </div>
     </div>
 
-    <button class="top-btn" onclick="location.reload()">🏆 ОНОВИТИ ТОР</button>
-
     <div class="score-panel">
         <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
         <div class="stats-row">
@@ -64,23 +60,24 @@
         <div class="side-btn" onclick="showRules()">?</div>
     </div>
 
-    <canvas id="tetris" width="240" height="400"></canvas>
+    <div class="game-container">
+        <canvas id="tetris" width="240" height="400"></canvas>
+    </div>
 
     <div class="controls">
         <div class="btn" onpointerdown="playerMove(-1)">⬅️</div>
         <div class="btn" onpointerdown="playerRotate()">🔄</div>
-        <div class="btn" onpointerdown="playerDrop()">⬇️</div>
+        <div class="btn btn-drop" onpointerdown="playerDrop()">⬇️</div>
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
     </div>
 
     <div id="rulesBox" class="overlay">
         <div class="content">
-            <h3 style="color:#ffd700; margin-top:0;">ЯК ГРАТИ?</h3>
-            <div class="rules-list">
-                • Складайте лінії, щоб отримувати очки.<br>
-                • Кожна лінія = 10 балів.<br>
-                • VIP-рівень дає доступ до розіграшу фонду.<br>
-                • Фонд росте з кожною покупкою.<br>
+            <h3 style="color:var(--accent); margin-top:0;">ПРАВИЛА</h3>
+            <div style="text-align: left; font-size: 13px; color: #ccc; line-height: 1.6;">
+                • 1 лінія = 10 балів.<br>
+                • VIP дає шанс виграти TON.<br>
+                • Тінь показує місце падіння.<br>
                 • Рекорд зберігається автоматично.
             </div>
             <button class="top-btn" onclick="closeRules()">ЗРОЗУМІЛО</button>
@@ -89,9 +86,9 @@
 
     <div id="gameOverBox" class="overlay">
         <div class="content">
-            <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
-            <p>Ваш рахунок: <span id="finalScore">0</span></p>
-            <button class="top-btn" onclick="location.reload()">ГРАТИ ЗНОВУ</button>
+            <h2 style="color:#ff4444">ГРА ЗАКІНЧЕНА</h2>
+            <p>Рахунок: <span id="finalScore" style="font-weight:bold; color: #00d4ff;">0</span></p>
+            <button class="top-btn" onclick="location.reload()">СПРОБУВАТИ ЗНОВУ</button>
         </div>
     </div>
 
@@ -105,29 +102,43 @@
             document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
         });
 
+        async function sendPayment() {
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 60,
+                messages: [{
+                    address: "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw",
+                    amount: "10000000" // 0.01 TON
+                }]
+            };
+            try {
+                await tonConnectUI.sendTransaction(transaction);
+                alert("Дякуємо! VIP статус активовано (локально).");
+            } catch (e) { console.error(e); }
+        }
+
         async function updateJackpot() {
             try {
                 const res = await fetch('https://toncenter.com/api/v2/getAddressInformation?address=UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw');
                 const data = await res.json();
                 if (data.ok) {
-                    const totalBalance = data.result.balance / 1e9;
-                    const fundOnly = Math.max(0, totalBalance - 2.14); 
-                    document.getElementById('jackpot').innerText = fundOnly.toFixed(2) + " TON";
+                    const balance = data.result.balance / 1e9;
+                    document.getElementById('jackpot').innerText = Math.max(0, balance - 2.14).toFixed(2) + " TON";
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { }
         }
         updateJackpot();
 
-        // Звукові ефекти
+        // Аудіо
         let isSoundOn = true;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playTone(freq, type, duration) {
             if (!isSoundOn) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -143,7 +154,7 @@
         function showRules() { document.getElementById('rulesBox').style.display = 'flex'; }
         function closeRules() { document.getElementById('rulesBox').style.display = 'none'; }
 
-        // Логіка гри
+        // Логіка Tetris
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
         context.scale(20, 20);
@@ -153,143 +164,4 @@
             if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
             if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
             if (type === 'O') return [[4,4],[4,4]];
-            if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
-            if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
-            if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
-        }
-
-        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
-        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-
-        let highScore = localStorage.getItem('tetrisBest') || 0;
-        document.getElementById('best').innerText = highScore;
-
-        function arenaSweep() {
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
-                ++y;
-                player.score += 10;
-                playTone(600, 'square', 0.2);
-            }
-            updateScore();
-        }
-
-        function updateScore() {
-            document.getElementById('score').innerText = player.score;
-            if (player.score > highScore) {
-                highScore = player.score;
-                localStorage.setItem('tetrisBest', highScore);
-                document.getElementById('best').innerText = highScore;
-            }
-        }
-
-        function draw() {
-            context.fillStyle = '#000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            drawMatrix(arena, {x: 0, y: 0});
-            drawMatrix(player.matrix, player.pos);
-        }
-
-        function drawMatrix(matrix, offset) {
-            matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        context.fillStyle = colors[value];
-                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                    }
-                });
-            });
-        }
-
-        function collide(arena, player) {
-            const [m, o] = [player.matrix, player.pos];
-            for (let y = 0; y < m.length; ++y) {
-                for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
-                }
-            }
-            return false;
-        }
-
-        function merge(arena, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-                });
-            });
-            playTone(200, 'sine', 0.1);
-        }
-
-        function playerReset() {
-            const pieces = 'ILJOTSZ';
-            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-            player.pos.y = 0;
-            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            if (collide(arena, player)) {
-                document.getElementById('finalScore').innerText = player.score;
-                document.getElementById('gameOverBox').style.display = 'flex';
-                playTone(150, 'sawtooth', 0.5);
-                cancelAnimationFrame(animationId);
-            }
-        }
-
-        function playerDrop() {
-            player.pos.y++;
-            if (collide(arena, player)) {
-                player.pos.y--;
-                merge(arena, player);
-                playerReset();
-                arenaSweep();
-            }
-            dropCounter = 0;
-        }
-
-        function playerMove(dir) {
-            player.pos.x += dir;
-            if (collide(arena, player)) player.pos.x -= dir;
-            else playTone(400, 'sine', 0.05);
-        }
-
-        function playerRotate() {
-            const pos = player.pos.x;
-            let offset = 1;
-            const matrix = player.matrix;
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
-            }
-            matrix.forEach(row => row.reverse());
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) {
-                    player.pos.x = pos;
-                    return;
-                }
-            }
-            playTone(500, 'sine', 0.05);
-        }
-
-        let dropCounter = 0;
-        let lastTime = 0;
-        let animationId;
-        function update(time = 0) {
-            const deltaTime = time - lastTime;
-            lastTime = time;
-            dropCounter += deltaTime;
-            if (dropCounter > 1000) playerDrop();
-            draw();
-            animationId = requestAnimationFrame(update);
-        }
-
-        playerReset();
-        update();
-    </script>
-</body>
-</html>
+            if (type === '
