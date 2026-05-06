@@ -6,16 +6,31 @@
   <title>UA TETRIS 🗿</title>
   <style>
     body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; overflow: hidden; touch-action: none; }
-    canvas { border: 2px solid #555; background: #000; width: 280px; height: 450px; border-radius: 10px; }
-    .score { font-size: 32px; margin: 10px; font-weight: bold; color: #00d4ff; }
-    .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 15px; margin-top: 20px; }
-    .btn { background: #333; border: 2px solid #555; color: white; padding: 20px; border-radius: 15px; font-size: 25px; text-align: center; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .header { display: flex; gap: 15px; margin-bottom: 10px; align-items: center; }
+    .stat-box { text-align: center; background: #333; padding: 5px 12px; border-radius: 8px; border: 1px solid #444; min-width: 60px; }
+    .label { font-size: 10px; color: #aaa; text-transform: uppercase; }
+    .value { font-size: 20px; font-weight: bold; color: #00d4ff; }
+    .music-btn { background: #444; border: 1px solid #666; color: white; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 20px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
+    canvas { border: 2px solid #555; background: #000; width: 280px; height: 400px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 15px; margin-top: 15px; }
+    .btn { background: #333; border: 2px solid #555; color: white; padding: 20px; border-radius: 15px; font-size: 25px; text-align: center; user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer; }
     .btn:active { background: #555; transform: scale(0.95); }
     .rotate { grid-column: 2; background: #444; }
   </style>
 </head>
 <body>
-  <div class="score" id="score">0</div>
+  <div class="header">
+    <div class="stat-box">
+      <div class="label">Score</div>
+      <div class="value" id="score">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Best</div>
+      <div class="value" id="best">0</div>
+    </div>
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🔈</button>
+  </div>
+
   <canvas id="tetris" width="240" height="400"></canvas>
 
   <div class="controls">
@@ -27,10 +42,31 @@
     <div class="btn" onpointerdown="playerMove(1)">➡️</div>
   </div>
 
+  <audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+  </audio>
+
   <script>
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
+    const music = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
     context.scale(20, 20);
+
+    let isMusicPlaying = false;
+    let bestScore = localStorage.getItem('ua_tetris_best') || 0;
+    document.getElementById('best').innerText = bestScore;
+
+    function toggleMusic() {
+        if (isMusicPlaying) {
+            music.pause();
+            musicBtn.innerText = '🔈';
+        } else {
+            music.play();
+            musicBtn.innerText = '🔊';
+        }
+        isMusicPlaying = !isMusicPlaying;
+    }
 
     function arenaSweep() {
         let rowCount = 1;
@@ -123,6 +159,11 @@
         player.pos.y = 0;
         player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
         if (collide(arena, player)) {
+            if (player.score > bestScore) {
+                bestScore = player.score;
+                localStorage.setItem('ua_tetris_best', bestScore);
+                document.getElementById('best').innerText = bestScore;
+            }
             arena.forEach(row => row.fill(0));
             player.score = 0;
             updateScore();
@@ -169,6 +210,9 @@
 
     function updateScore() {
         document.getElementById('score').innerText = player.score;
+        if (player.score > bestScore) {
+            document.getElementById('best').innerText = player.score;
+        }
     }
 
     const arena = createMatrix(12, 20);
