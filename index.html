@@ -8,22 +8,18 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; height: 100vh; }
-        
-        /* КНОПКА ГАМАНЦЯ */
-        #ton-connect-button { margin-bottom: 10px; min-height: 44px; z-index: 100; display: flex; justify-content: center; }
-        
+        #ton-connect-button { margin-bottom: 10px; min-height: 44px; z-index: 100; }
         .menu-btn { width: 260px; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; background: #ffd700; color: #000; }
-        #payButton { background: #0088cc; color: white; display: none; }
+        #payButton { background: #0088cc; color: white; display: none; margin-bottom: 5px; }
         
-        .stats-row { display: flex; gap: 10px; margin: 10px 0; }
-        .stat-box { background: #222; padding: 8px 15px; border-radius: 8px; border: 1px solid #333; min-width: 90px; text-align: center; }
+        .stats { display: flex; gap: 15px; margin-bottom: 10px; }
+        .stat-box { background: #222; padding: 10px 20px; border-radius: 8px; border: 1px solid #333; text-align: center; min-width: 80px; }
         .label { font-size: 10px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
+        .value { font-size: 20px; font-weight: bold; color: #00d4ff; }
 
-        canvas { border: 3px solid #444; background: #000; width: 240px; height: 400px; border-radius: 10px; }
-        
+        canvas { border: 3px solid #333; background: #000; width: 240px; height: 400px; border-radius: 10px; }
         .controls { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-top: 15px; }
-        .btn { background: #333; border: 1px solid #555; color: white; width: 70px; height: 70px; border-radius: 15px; font-size: 24px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .btn { background: #333; border: 1px solid #444; color: white; width: 70px; height: 70px; border-radius: 15px; font-size: 24px; display: flex; align-items: center; justify-content: center; user-select: none; }
         
         .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
         .content { background: #1a1a1a; padding: 25px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
@@ -36,7 +32,7 @@
     <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 VIP Level (0.01 TON)</button>
     <button class="menu-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
 
-    <div class="stats-row">
+    <div class="stats">
         <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
         <div class="stat-box"><div class="label">Рекорд</div><div id="best" class="value">0</div></div>
     </div>
@@ -55,27 +51,23 @@
     <div id="gameOverBox" class="overlay">
         <div class="content">
             <h2 style="color:#ff4444">GAME OVER</h2>
-            <p>Результат: <span id="finalScore">0</span></p>
+            <p>Ваш результат: <span id="finalScore">0</span></p>
             <input type="text" id="pName" placeholder="Твій нік" style="padding:10px; width:80%; margin-bottom:10px; border-radius:5px; border:none;">
             <button class="menu-btn" onclick="saveRecord()">ЗБЕРЕГТИ</button>
-            <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:15px; cursor:pointer;">Заново</button>
+            <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:15px;">Спробувати ще раз</button>
         </div>
     </div>
 
     <script>
-        // --- TON CONNECT ІНІЦІАЛІЗАЦІЯ ---
+        // --- ПІДКЛЮЧЕННЯ TON ---
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
         tonConnectUI.onStatusChange(wallet => {
-            const payBtn = document.getElementById('payButton');
-            if (wallet) { payBtn.style.display = 'block'; } 
-            else { payBtn.style.display = 'none'; }
+            document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
         });
-
-        const _supabase = window.supabase.createClient('https://etwbvrrbflvyxkvetsir.supabase.co', 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E');
 
         async function sendPayment() {
             const tx = {
@@ -196,17 +188,7 @@
             if (collide(arena, player)) {
                 document.getElementById('finalScore').innerText = player.score;
                 document.getElementById('gameOverBox').style.display = 'flex';
-                player.score = 0; // Скидання для візуалу
             }
-        }
-
-        async function saveRecord() {
-            const wallet = tonConnectUI.wallet;
-            if(!wallet) return alert("Спочатку підключи гаманець!");
-            const name = document.getElementById('pName').value || "Гравець";
-            const finalScore = parseInt(document.getElementById('finalScore').innerText);
-            await _supabase.from('players').upsert([{ wallet: wallet.account.address, username: name, score: finalScore }], { onConflict: 'wallet' });
-            location.reload();
         }
 
         let dropCounter = 0;
