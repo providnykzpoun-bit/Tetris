@@ -4,21 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>UA TETRIS 🗿</title>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <style>
-    body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; overflow: hidden; touch-action: none; }
-    .header { display: flex; gap: 15px; margin-bottom: 10px; align-items: center; }
-    .stat-box { text-align: center; background: #333; padding: 5px 12px; border-radius: 8px; border: 1px solid #444; min-width: 60px; }
-    .label { font-size: 10px; color: #aaa; text-transform: uppercase; }
-    .value { font-size: 20px; font-weight: bold; color: #00d4ff; }
-    .music-btn { background: #444; border: 1px solid #666; color: white; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 20px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
-    canvas { border: 2px solid #555; background: #000; width: 280px; height: 400px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; overflow-x: hidden; touch-action: none; }
+    .header { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; width: 100%; justify-content: center; }
+    .stat-box { text-align: center; background: #333; padding: 5px 10px; border-radius: 8px; border: 1px solid #444; min-width: 50px; }
+    .label { font-size: 9px; color: #aaa; text-transform: uppercase; }
+    .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
+    #ton-connect-button { margin-bottom: 10px; }
+    .pay-section { margin-bottom: 10px; width: 100%; display: flex; justify-content: center; }
+    .pay-btn { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; display: none; }
+    canvas { border: 2px solid #555; background: #000; width: 280px; height: 400px; border-radius: 10px; }
     .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 15px; margin-top: 15px; }
-    .btn { background: #333; border: 2px solid #555; color: white; padding: 20px; border-radius: 15px; font-size: 25px; text-align: center; user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer; }
-    .btn:active { background: #555; transform: scale(0.95); }
+    .btn { background: #333; border: 2px solid #555; color: white; padding: 20px; border-radius: 15px; font-size: 25px; text-align: center; user-select: none; }
     .rotate { grid-column: 2; background: #444; }
   </style>
 </head>
 <body>
+
+  <div id="ton-connect-button"></div>
+
+  <div class="pay-section">
+    <button id="payButton" class="pay-btn" onclick="sendPayment()">🔓 Наст. рівень (0.01 TON)</button>
+  </div>
+
   <div class="header">
     <div class="stat-box">
       <div class="label">Score</div>
@@ -28,7 +37,7 @@
       <div class="label">Best</div>
       <div class="value" id="best">0</div>
     </div>
-    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🔈</button>
+    <button style="background:#444; border:none; color:white; border-radius:50%; width:40px; height:40px;" onclick="toggleMusic()">🔈</button>
   </div>
 
   <canvas id="tetris" width="240" height="400"></canvas>
@@ -47,49 +56,48 @@
   </audio>
 
   <script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect-button'
+    });
+
+    tonConnectUI.onStatusChange(wallet => {
+        document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
+    });
+
+    async function sendPayment() {
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 120,
+            messages: [
+                {
+                    address: "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw",
+                    amount: "10000000" 
+                }
+            ]
+        };
+
+        try {
+            await tonConnectUI.sendTransaction(transaction);
+            alert("Оплата успішна! Швидкість гри збільшена.");
+            dropInterval = 400; 
+        } catch (e) {
+            alert("Оплата скасована або сталася помилка.");
+        }
+    }
+
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     const music = document.getElementById('bgMusic');
-    const musicBtn = document.getElementById('musicBtn');
     context.scale(20, 20);
 
     let isMusicPlaying = false;
+    let dropInterval = 1000;
     let bestScore = localStorage.getItem('ua_tetris_best') || 0;
     document.getElementById('best').innerText = bestScore;
 
     function toggleMusic() {
-        if (isMusicPlaying) {
-            music.pause();
-            musicBtn.innerText = '🔈';
-        } else {
-            music.play();
-            musicBtn.innerText = '🔊';
-        }
+        if (isMusicPlaying) { music.pause(); } else { music.play(); }
         isMusicPlaying = !isMusicPlaying;
-    }
-
-    function arenaSweep() {
-        let rowCount = 1;
-        outer: for (let y = arena.length - 1; y > 0; --y) {
-            for (let x = 0; x < arena[y].length; ++x) {
-                if (arena[y][x] === 0) continue outer;
-            }
-            const row = arena.splice(y, 1)[0].fill(0);
-            arena.unshift(row);
-            ++y;
-            player.score += rowCount * 10;
-            rowCount *= 2;
-        }
-    }
-
-    function collide(arena, player) {
-        const [m, o] = [player.matrix, player.pos];
-        for (let y = 0; y < m.length; ++y) {
-            for (let x = 0; x < m[y].length; ++x) {
-                if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
-            }
-        }
-        return false;
     }
 
     function createMatrix(w, h) {
@@ -100,22 +108,13 @@
 
     function createPiece(type) {
         if (type === 'T') return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
-        else if (type === 'O') return [[2, 2], [2, 2]];
-        else if (type === 'L') return [[0, 3, 0], [0, 3, 0], [0, 3, 3]];
-        else if (type === 'J') return [[0, 4, 0], [0, 4, 0], [4, 4, 0]];
-        else if (type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
-        else if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
-        else if (type === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+        if (type === 'O') return [[2, 2], [2, 2]];
+        if (type === 'L') return [[0, 3, 0], [0, 3, 0], [0, 3, 3]];
+        if (type === 'J') return [[0, 4, 0], [0, 4, 0], [4, 4, 0]];
+        if (type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
+        if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+        if (type === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
     }
-
-    function draw() {
-        context.fillStyle = '#000';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        drawMatrix(arena, {x: 0, y: 0});
-        drawMatrix(player.matrix, player.pos);
-    }
-
-    const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
 
     function drawMatrix(matrix, offset) {
         matrix.forEach((row, y) => {
@@ -128,12 +127,29 @@
         });
     }
 
+    function draw() {
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        drawMatrix(arena, {x: 0, y: 0});
+        drawMatrix(player.matrix, player.pos);
+    }
+
     function merge(arena, player) {
         player.matrix.forEach((row, y) => {
             row.forEach((value, x) => {
                 if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
             });
         });
+    }
+
+    function rotate(matrix, dir) {
+        for (let y = 0; y < matrix.length; ++y) {
+            for (let x = 0; x < y; ++x) {
+                [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+        }
+        if (dir > 0) matrix.forEach(row => row.reverse());
+        else matrix.reverse();
     }
 
     function playerDrop() {
@@ -153,6 +169,45 @@
         if (collide(arena, player)) player.pos.x -= dir;
     }
 
+    function playerRotate(dir) {
+        const pos = player.pos.x;
+        let offset = 1;
+        rotate(player.matrix, dir);
+        while (collide(arena, player)) {
+            player.pos.x += offset;
+            offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > player.matrix[0].length) {
+                rotate(player.matrix, -dir);
+                player.pos.x = pos;
+                return;
+            }
+        }
+    }
+
+    function collide(arena, player) {
+        const [m, o] = [player.matrix, player.pos];
+        for (let y = 0; y < m.length; ++y) {
+            for (let x = 0; x < m[y].length; ++x) {
+                if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+            }
+        }
+        return false;
+    }
+
+    function arenaSweep() {
+        let rowCount = 1;
+        outer: for (let y = arena.length - 1; y > 0; --y) {
+            for (let x = 0; x < arena[y].length; ++x) {
+                if (arena[y][x] === 0) continue outer;
+            }
+            const row = arena.splice(y, 1)[0].fill(0);
+            arena.unshift(row);
+            ++y;
+            player.score += rowCount * 10;
+            rowCount *= 2;
+        }
+    }
+
     function playerReset() {
         const pieces = 'ILJOTSZ';
         player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
@@ -170,35 +225,17 @@
         }
     }
 
-    function playerRotate(dir) {
-        const pos = player.pos.x;
-        let offset = 1;
-        rotate(player.matrix, dir);
-        while (collide(arena, player)) {
-            player.pos.x += offset;
-            offset = -(offset + (offset > 0 ? 1 : -1));
-            if (offset > player.matrix[0].length) {
-                rotate(player.matrix, -dir);
-                player.pos.x = pos;
-                return;
-            }
-        }
+    function updateScore() {
+        document.getElementById('score').innerText = player.score;
+        if (player.score > bestScore) document.getElementById('best').innerText = player.score;
     }
 
-    function rotate(matrix, dir) {
-        for (let y = 0; y < matrix.length; ++y) {
-            for (let x = 0; x < y; ++x) {
-                [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-            }
-        }
-        if (dir > 0) matrix.forEach(row => row.reverse());
-        else matrix.reverse();
-    }
+    const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+    const arena = createMatrix(12, 20);
+    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
     let dropCounter = 0;
-    let dropInterval = 1000;
     let lastTime = 0;
-
     function update(time = 0) {
         const deltaTime = time - lastTime;
         lastTime = time;
@@ -207,16 +244,6 @@
         draw();
         requestAnimationFrame(update);
     }
-
-    function updateScore() {
-        document.getElementById('score').innerText = player.score;
-        if (player.score > bestScore) {
-            document.getElementById('best').innerText = player.score;
-        }
-    }
-
-    const arena = createMatrix(12, 20);
-    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
     playerReset();
     updateScore();
