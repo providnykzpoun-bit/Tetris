@@ -11,16 +11,10 @@
     .stat-box { text-align: center; background: #333; padding: 5px 8px; border-radius: 8px; border: 1px solid #444; min-width: 60px; }
     .label { font-size: 9px; color: #aaa; text-transform: uppercase; }
     .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
-    
     #ton-connect-button { margin-bottom: 10px; }
-    .pay-btn { background: #0088cc; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; display: none; margin-bottom: 10px; width: 280px; }
-    
     canvas { border: 2px solid #555; background: #000; width: 280px; height: 400px; border-radius: 10px; }
-    
     .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 15px; margin-top: 15px; }
     .btn { background: #333; border: 2px solid #555; color: white; padding: 20px; border-radius: 15px; font-size: 25px; text-align: center; user-select: none; }
-    .btn:active { background: #555; }
-
     #leaderboard-ui { display:none; background: rgba(0,0,0,0.95); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
     #playerName { padding: 12px; border-radius: 8px; border: 1px solid #555; background: #222; color: white; margin: 15px 0; width: 200px; }
     .share-btn { background: #0088cc; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; }
@@ -29,12 +23,11 @@
 <body>
 
   <div id="ton-connect-button"></div>
-  <button id="payButton" class="pay-btn" onclick="sendPayment()">🔓 Відкрити VIP Level (0.01 TON)</button>
 
   <div class="header">
     <div class="stat-box"><div class="label">Score</div><div id="score" class="value">0</div></div>
     <div class="stat-box"><div class="label">Best</div><div id="best" class="value">0</div></div>
-    <div class="stat-box"><div class="label">Level</div><div id="levelDisplay" class="value">1</div></div>
+    <div class="stat-box"><div class="label">Status</div><div id="statusDisplay" class="value" style="font-size:10px;">Offline</div></div>
   </div>
 
   <canvas id="tetris" width="240" height="400"></canvas>
@@ -48,16 +41,15 @@
 
   <div id="leaderboard-ui">
     <h2 style="color: #ffd700;">GAME OVER 🗿</h2>
-    <p>Рекорд: <span id="finalScore">0</span></p>
+    <p>Твій результат: <span id="finalScore">0</span></p>
     <input type="text" id="playerName" placeholder="Твій нік">
-    <button class="share-btn" onclick="saveAndShare()">🚀 Опублікувати рекорд</button>
-    <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:15px;">Спробувати знову</button>
+    <button class="share-btn" onclick="saveRecord()">🚀 Зберегти в Supabase</button>
   </div>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    // --- НАЛАШТУВАННЯ SUPABASE (ТВІЙ КЛЮЧ ВЖЕ ТУТ) ---
+    // НАЛАШТУВАННЯ ТВОГО ПРОЕКТУ
     const supabaseUrl = 'https://etwbvrrbflvyxkvetsir.supabase.co';
     const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -67,33 +59,44 @@
         buttonRootId: 'ton-connect-button'
     });
 
-    // Функція збереження в базу
-    async function syncWithDB(username, score) {
+    tonConnectUI.onStatusChange(wallet => {
+        document.getElementById('statusDisplay').innerText = wallet ? "Online" : "Connect Wallet";
+        document.getElementById('statusDisplay').style.color = wallet ? "#00ff00" : "#ff0000";
+    });
+
+    // ФУНКЦІЯ ЗБЕРЕЖЕННЯ
+    window.saveRecord = async function() {
         const wallet = tonConnectUI.wallet;
-        if (!wallet) return;
+        const name = document.getElementById('playerName').value || "Анонім";
+        const finalScore = parseInt(document.getElementById('finalScore').innerText);
+
+        if (!wallet) {
+            alert("Спочатку підключи гаманець!");
+            return;
+        }
 
         const { error } = await supabase.from('players').upsert([{ 
             wallet: wallet.account.address, 
-            username: username,
-            score: score 
+            username: name,
+            score: finalScore 
         }], { onConflict: 'wallet' });
 
-        if (error) console.error("Помилка бази:", error);
+        if (error) {
+            alert("Помилка: " + error.message);
+        } else {
+            alert("Рекорд збережено! Перевір Supabase.");
+            location.reload();
+        }
     }
 
-    tonConnectUI.onStatusChange(wallet => {
-        document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
-    });
-
-    // --- ЛОГІКА ТЕТРІСУ ---
+    // ЛОГІКА ТЕТРІСУ
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     context.scale(20, 20);
 
-    function createMatrix(w, h) { const m = []; while (h--) m.push(new Array(w).fill(0)); return m; }
-    const arena = createMatrix(12, 20);
-    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
     const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+    const arena = Array.from({length: 20}, () => new Array(12).fill(0));
+    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
     function createPiece(t) {
         if(t==='I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -108,35 +111,35 @@
     function draw() {
         context.fillStyle = '#000';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        drawMatrix(arena, {x: 0, y: 0});
+        drawMatrix(arena, {x:0, y:0});
         drawMatrix(player.matrix, player.pos);
     }
 
     function drawMatrix(m, o) {
-        m.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value !== 0) {
-                    context.fillStyle = colors[value];
-                    context.fillRect(x + o.x, y + o.y, 1, 1);
-                }
-            });
-        });
+        m.forEach((row, y) => row.forEach((v, x) => {
+            if (v !== 0) { context.fillStyle = colors[v]; context.fillRect(x + o.x, y + o.y, 1, 1); }
+        }));
     }
 
-    function merge(a, p) { p.matrix.forEach((r, y) => { r.forEach((v, x) => { if (v !== 0) a[y + p.pos.y][x + p.pos.x] = v; }); }); }
     function collide(a, p) {
         const [m, o] = [p.matrix, p.pos];
         for (let y = 0; y < m.length; ++y) {
             for (let x = 0; x < m[y].length; ++x) {
-                if (m[y][x] !== 0 && (a[y + o.y] && a[y + o.y][x + o.x]) !== 0) return true;
+                if (m[y][x] !== 0 && (a[y+o.y] && a[y+o.y][x+o.x]) !== 0) return true;
             }
         }
         return false;
     }
 
+    function merge(a, p) {
+        p.matrix.forEach((row, y) => row.forEach((v, x) => {
+            if (v !== 0) a[y + p.pos.y][x + p.pos.x] = v;
+        }));
+    }
+
     function playerReset() {
         const pieces = 'ILJOTSZ';
-        player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+        player.matrix = createPiece(pieces[Math.random() * pieces.length | 0]);
         player.pos.y = 0;
         player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
         if (collide(arena, player)) {
@@ -169,35 +172,28 @@
         }
     }
 
-    function rotate(m, d) { for (let y = 0; y < m.length; ++y) { for (let x = 0; x < y; ++x) { [m[x][y], m[y][x]] = [m[y][x], m[x][y]]; } } if (d > 0) m.forEach(r => r.reverse()); else m.reverse(); }
+    function rotate(m, d) {
+        for (let y = 0; y < m.length; ++y) for (let x = 0; x < y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+        if (d > 0) m.forEach(r => r.reverse()); else m.reverse();
+    }
 
     function arenaSweep() {
         outer: for (let y = arena.length - 1; y > 0; --y) {
-            for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
-            const row = arena.splice(y, 1)[0].fill(0);
-            arena.unshift(row);
-            ++y;
+            for (let x = 0; x < arena[y].length; ++x) if (arena[y][x] === 0) continue outer;
+            arena.splice(y, 1);
+            arena.unshift(new Array(12).fill(0));
             player.score += 10;
         }
         document.getElementById('score').innerText = player.score;
     }
 
-    window.saveAndShare = async function() {
-        const name = document.getElementById('playerName').value || "Анонім";
-        const score = document.getElementById('finalScore').innerText;
-        await syncWithDB(name, score);
-        alert("Рекорд збережено в Supabase!");
-        location.reload();
-    }
-
     let dropCounter = 0;
-    let dropInterval = 1000;
     let lastTime = 0;
     function update(time = 0) {
-        const deltaTime = time - lastTime;
+        const dt = time - lastTime;
         lastTime = time;
-        dropCounter += deltaTime;
-        if (dropCounter > dropInterval) playerDrop();
+        dropCounter += dt;
+        if (dropCounter > 1000) playerDrop();
         draw();
         requestAnimationFrame(update);
     }
