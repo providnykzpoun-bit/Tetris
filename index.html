@@ -5,73 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UA TETRIS 🗿</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; height: 100vh; }
+        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         
-        /* Кнопка гаманця */
-        #ton-connect-button { margin-bottom: 10px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
-        
-        .menu-btn { width: 240px; padding: 10px; margin: 2px 0; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
-        #payButton { background: #0088cc; color: white; display: none; }
-        .top-btn { background: #ffd700; color: #000; }
-        
-        .jackpot-box { 
-            background: linear-gradient(45deg, #1a1a1a, #2a2a2a); 
-            border: 2px solid #ffd700; 
-            padding: 8px; 
-            border-radius: 12px; 
-            text-align: center; 
-            width: 220px; 
-            margin-bottom: 8px;
-        }
-        .jackpot-label { font-size: 9px; color: #ffd700; text-transform: uppercase; }
-        .jackpot-value { font-size: 20px; color: #ffd700; font-weight: 900; }
+        #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
 
-        .stats-row { display: flex; gap: 10px; margin-bottom: 8px; }
-        .stat-box { background: #222; padding: 5px 10px; border-radius: 8px; border: 1px solid #333; min-width: 80px; text-align: center; }
-        .label { font-size: 9px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
-
-        canvas { border: 3px solid #333; background: #000; width: 220px; height: 380px; border-radius: 10px; }
+        /* ОБ'ЄДНАНИЙ РЯДОК: VIP ТА ФОНД */
+        .top-info-row { display: flex; gap: 5px; width: 280px; margin-bottom: 5px; }
         
-        /* ВИПРАВЛЕНА СІТКА КНОПОК */
-        .controls { 
-            display: grid; 
-            grid-template-columns: repeat(3, 65px); 
-            grid-template-rows: repeat(2, 60px);
-            gap: 8px; 
-            margin-top: 10px; 
-        }
-        .btn { 
-            background: #333; 
-            border: 1px solid #444; 
-            color: white; 
-            border-radius: 12px; 
-            font-size: 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            user-select: none;
-            touch-action: manipulation;
-        }
+        .mini-btn { flex: 1; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; display: none; background: #0088cc; color: white; }
+        
+        .mini-jackpot { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
+        .jackpot-label { font-size: 8px; color: #ffd700; text-transform: uppercase; }
+        .jackpot-value { font-size: 14px; color: #ffd700; font-weight: bold; }
+
+        .top-btn { width: 280px; background: #ffd700; color: #000; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+
+        .stats-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
+        .label { font-size: 8px; color: #aaa; text-transform: uppercase; }
+        .value { font-size: 14px; font-weight: bold; color: #00d4ff; }
+
+        canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
+        
+        /* КНОПКИ В ОДИН РЯД */
+        .controls { display: flex; gap: 8px; margin-top: 10px; width: 100%; justify-content: center; }
+        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
         .btn:active { background: #555; }
-        
-        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
-        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
     </style>
 </head>
 <body>
 
     <div id="ton-connect-button"></div>
     
-    <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 VIP Level (0.01 TON)</button>
-    <button class="menu-btn top-btn" onclick="location.reload()">🏆 ОНОВИТИ ТОР</button>
-
-    <div class="jackpot-box">
-        <div class="jackpot-label">Призовий фонд</div>
-        <div id="jackpot" class="jackpot-value">0.00 TON</div>
+    <div class="top-info-row">
+        <button id="payButton" class="mini-btn" onclick="sendPayment()">🔓 VIP (0.01 TON)</button>
+        <div class="mini-jackpot">
+            <div class="jackpot-label">Призовий фонд</div>
+            <div id="jackpot" class="jackpot-value">0.00 TON</div>
+        </div>
     </div>
+
+    <button class="top-btn" onclick="location.reload()">🏆 ОНОВИТИ ТОР</button>
 
     <div class="stats-row">
         <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
@@ -83,17 +58,8 @@
     <div class="controls">
         <div class="btn" onpointerdown="playerMove(-1)">⬅️</div>
         <div class="btn" onpointerdown="playerRotate()">🔄</div>
+        <div class="btn" onpointerdown="playerDrop()">⬇️</div>
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
-        <div></div> <div class="btn" onpointerdown="playerDrop()">⬇️</div>
-        <div></div>
-    </div>
-
-    <div id="gameOverBox" class="overlay">
-        <div class="content">
-            <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
-            <p>Ваш рахунок: <span id="finalScore">0</span></p>
-            <button class="menu-btn top-btn" onclick="location.reload()">ГРАТИ ЗНОВУ</button>
-        </div>
     </div>
 
     <script>
@@ -118,6 +84,7 @@
         }
         updateJackpot();
 
+        // Логіка гри (Тетріс)
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
         context.scale(20, 20);
@@ -136,13 +103,6 @@
         const arena = Array.from({length: 20}, () => new Array(12).fill(0));
         const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
-        function draw() {
-            context.fillStyle = '#000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            drawMatrix(arena, {x: 0, y: 0});
-            drawMatrix(player.matrix, player.pos);
-        }
-
         function drawMatrix(matrix, offset) {
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
@@ -152,6 +112,13 @@
                     }
                 });
             });
+        }
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos);
         }
 
         function collide(arena, player) {
@@ -172,35 +139,33 @@
             });
         }
 
-        function arenaSweep() {
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
-                player.score += 10;
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            if (collide(arena, player)) {
+                arena.forEach(row => row.fill(0));
+                player.score = 0;
             }
-            document.getElementById('score').innerText = player.score;
         }
 
-        window.playerDrop = function() {
+        function playerDrop() {
             player.pos.y++;
             if (collide(arena, player)) {
                 player.pos.y--;
                 merge(arena, player);
                 playerReset();
-                arenaSweep();
             }
             dropCounter = 0;
-        };
+        }
 
-        window.playerMove = function(dir) {
+        function playerMove(dir) {
             player.pos.x += dir;
             if (collide(arena, player)) player.pos.x -= dir;
-        };
+        }
 
-        window.playerRotate = function() {
+        function playerRotate() {
             const pos = player.pos.x;
             let offset = 1;
             const matrix = player.matrix;
@@ -217,17 +182,6 @@
                     player.pos.x = pos;
                     return;
                 }
-            }
-        };
-
-        function playerReset() {
-            const pieces = 'ILJOTSZ';
-            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-            player.pos.y = 0;
-            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            if (collide(arena, player)) {
-                document.getElementById('finalScore').innerText = player.score;
-                document.getElementById('gameOverBox').style.display = 'flex';
             }
         }
 
