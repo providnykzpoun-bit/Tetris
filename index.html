@@ -3,53 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UA TETRIS 🗿 LIVE</title>
+    <title>UA TETRIS 🗿</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --accent: #ffd700; --bg: #111; --panel: #1a1a1a; }
-        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
+        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; height: 100vh; }
         
-        #ton-connect-button { margin-bottom: 5px; width: 300px; min-height: 44px; }
+        #ton-connect-button { margin-bottom: 10px; width: 100%; max-width: 300px; }
         
-        .top-row { display: flex; gap: 5px; width: 300px; margin-bottom: 5px; }
-        .mini-jackpot { flex: 1; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; text-align: center; padding: 4px; }
-        .mini-btn { flex: 1; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; }
+        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: 100%; max-width: 300px; }
+        .stat-box { background: #222; padding: 5px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #333; }
+        .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
 
-        .score-box { display: flex; gap: 10px; margin-bottom: 5px; width: 300px; }
-        .stat { flex: 1; background: #222; border-radius: 8px; text-align: center; padding: 5px; border: 1px solid #333; }
-        .val { font-size: 16px; font-weight: bold; color: #00d4ff; }
+        canvas { border: 3px solid #333; background: #000; height: 45vh; border-radius: 12px; }
+        
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; width: 100%; max-width: 320px; }
+        .btn { background: #2a2a2a; border: 1px solid #444; color: white; height: 60px; border-radius: 15px; font-size: 22px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .btn:active { background: #444; }
 
-        canvas { border: 2px solid #444; background: #000; height: 42vh; border-radius: 8px; }
+        .leaderboard { width: 100%; max-width: 300px; margin-top: 15px; background: var(--panel); border-radius: 10px; padding: 8px; font-size: 14px; }
+        .leader-item { display: flex; justify-content: space-between; padding: 3px 5px; border-bottom: 1px solid #333; }
 
-        .leaderboard-mini { width: 300px; background: rgba(255,255,255,0.05); margin-top: 8px; border-radius: 8px; padding: 5px; font-size: 11px; min-height: 80px; }
-        .leader-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid #333; }
-
-        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; width: 310px; }
-        .btn { background: #333; border: 1px solid #444; color: white; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; }
-        .btn:active { background: #555; }
-
-        .overlay { display:none; background: rgba(0,0,0,0.95); position: fixed; inset: 0; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        .content { background: var(--panel); padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid var(--accent); }
-        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; text-align: center; font-size: 16px; }
-        .top-btn { width: 100%; background: var(--accent); color: #000; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; inset: 0; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        .content { background: var(--panel); padding: 25px; border-radius: 24px; width: 80%; text-align: center; border: 2px solid var(--accent); }
+        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; text-align: center; }
+        .top-btn { width: 100%; background: var(--accent); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="ton-connect-button"></div>
     
-    <div class="top-row">
-        <button id="payButton" class="mini-btn" onclick="sendPayment()">🎟️ КВИТОК (0.01 TON)</button>
-        <div class="mini-jackpot">
-            <div style="font-size: 8px; color: var(--accent);">UA LOTTERY</div>
-            <div id="jackpot" style="font-size: 14px;">0.00 TON</div>
-        </div>
-    </div>
-
-    <div class="score-box">
-        <div class="stat"><div id="score" class="val">0</div></div>
-        <div class="stat"><div id="best" class="val">0</div></div>
+    <div class="score-panel">
+        <div class="stat-box"><div id="score" class="value">0</div></div>
+        <div class="stat-box"><div id="best" class="value">0</div></div>
     </div>
 
     <canvas id="tetris" width="240" height="400"></canvas>
@@ -61,16 +49,15 @@
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
     </div>
 
-    <div class="leaderboard-mini" id="leaderList">
-        <div style="text-align:center; color:var(--accent); margin-bottom:3px;">🏆 ТОП ГРАВЦІВ</div>
-        <div style="text-align:center; color:#666;">Завантаження...</div>
-    </div>
+    <div class="leaderboard" id="leaderList">
+        <div style="text-align:center; color:var(--accent); margin-bottom:5px;">🏆 ТАБЛИЦЯ РЕКОРДІВ</div>
+        </div>
 
     <div id="gameOverBox" class="overlay">
         <div class="content">
-            <h2 style="color:#ff4444; margin-top:0;">ГРА ЗАКІНЧЕНА</h2>
-            <p>Результат: <span id="finalScore" style="color:#00d4ff; font-weight:bold;">0</span></p>
-            <input type="text" id="playerName" placeholder="Твій нік" maxlength="12">
+            <h2 style="color:#ff4444">ГРА ЗАКІНЧЕНА</h2>
+            <p>Твій рахунок: <span id="finalScore">0</span></p>
+            <input type="text" id="playerName" placeholder="Введіть нік" maxlength="12">
             <button id="saveBtn" class="top-btn" onclick="saveRecord()">ЗБЕРЕГТИ РЕКОРД</button>
         </div>
     </div>
@@ -80,42 +67,39 @@
         const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-button'
-        });
-
-        tonConnectUI.onStatusChange(wallet => {
-            document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
-        });
-
+        // Завантаження ТОП-5
         async function loadLeaders() {
-            try {
-                const { data } = await supabaseClient
-                    .from('leaderboard')
-                    .select('player_name, score')
-                    .order('score', { ascending: false }).limit(5);
-                const list = document.getElementById('leaderList');
-                if (data && data.length > 0) {
-                    list.innerHTML = '<div style="text-align:center; color:var(--accent); margin-bottom:3px;">🏆 ТОП ГРАВЦІВ</div>';
-                    data.forEach((item, i) => {
-                        list.innerHTML += `<div class="leader-item"><span>${i+1}. ${item.player_name}</span><span style="color:#00d4ff">${item.score}</span></div>`;
-                    });
-                }
-            } catch (e) {}
+            const { data } = await supabaseClient
+                .from('leaderboard')
+                .select('player_name, score')
+                .order('score', { ascending: false }).limit(5);
+            
+            const list = document.getElementById('leaderList');
+            if (data && data.length > 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--accent); margin-bottom:5px;">🏆 ТАБЛИЦЯ РЕКОРДІВ</div>';
+                data.forEach((item, index) => {
+                    list.innerHTML += `<div class="leader-item"><span>${index+1}. ${item.player_name}</span><b>${item.score}</b></div>`;
+                });
+            }
         }
         loadLeaders();
 
+        // Збереження рекорду
         async function saveRecord() {
             const name = document.getElementById('playerName').value.trim() || "Гравець";
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
-            const { error } = await supabaseClient.from('leaderboard').insert([{ player_name: name, score: player.score }]);
+            btn.innerText = "ЗБЕРІГАЄМО...";
+
+            const { error } = await supabaseClient
+                .from('leaderboard')
+                .insert([{ player_name: name, score: player.score }]);
+
             if (!error) location.reload();
-            else btn.disabled = false;
+            else { alert("Помилка!"); btn.disabled = false; btn.innerText = "ПОВТОРИТИ"; }
         }
 
-        // Тут йде ваш оригінальний код Тетрісу, який ви надсилали
+        // ЛОГІКА ТЕТРІСУ
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
         context.scale(20, 20);
@@ -232,6 +216,11 @@
             draw();
             animationId = requestAnimationFrame(update);
         }
+
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect-button'
+        });
 
         playerReset();
         update();
