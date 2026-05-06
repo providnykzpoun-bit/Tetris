@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>UA TETRIS 🗿</title>
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
-    body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; }
-    .header { display: flex; gap: 8px; margin-bottom: 10px; justify-content: center; width: 100%; }
-    .stat-box { text-align: center; background: #333; padding: 5px 10px; border-radius: 8px; border: 1px solid #444; }
-    .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
-    canvas { border: 2px solid #555; background: #000; width: 280px; height: 450px; border-radius: 10px; }
-    .controls { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 10px; margin-top: 15px; }
-    .btn { background: #333; border: 2px solid #555; color: white; padding: 15px; border-radius: 12px; font-size: 24px; text-align: center; user-select: none; }
-    .menu-btn { width: 280px; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+    body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 10px; touch-action: none; overflow: hidden; }
+    #ton-connect-button { margin-bottom: 10px; }
+    .menu-btn { width: 280px; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-align: center; display: block; }
     #payButton { background: #0088cc; color: white; display: none; }
     .top-btn { background: #ffd700; color: #000; }
-    /* Вікна */
-    .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:100; flex-direction: column; align-items: center; justify-content: center; }
-    .content { background: #222; padding: 20px; border-radius: 15px; width: 80%; text-align: center; }
+    .header { display: flex; gap: 8px; margin-bottom: 10px; }
+    .stat-box { text-align: center; background: #333; padding: 5px 15px; border-radius: 8px; border: 1px solid #444; }
+    .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
+    canvas { border: 2px solid #555; background: #000; width: 240px; height: 400px; border-radius: 10px; }
+    .controls { display: grid; grid-template-columns: repeat(3, 75px); grid-gap: 10px; margin-top: 10px; }
+    .btn { background: #333; border: 2px solid #555; color: white; padding: 15px; border-radius: 12px; font-size: 24px; text-align: center; user-select: none; }
+    .overlay { display:none; background: rgba(0,0,0,0.95); position: fixed; top:0; left:0; width:100%; height:100%; z-index:100; flex-direction: column; align-items: center; justify-content: center; }
+    .content { background: #222; padding: 20px; border-radius: 15px; width: 80%; text-align: center; border: 1px solid #ffd700; }
   </style>
 </head>
 <body>
@@ -44,29 +44,29 @@
 
   <div id="gameOverBox" class="overlay">
     <div class="content">
-      <h2 style="color:#ffd700">GAME OVER</h2>
-      <p>Очки: <span id="finalScore">0</span></p>
-      <input type="text" id="pName" placeholder="Твій нік" style="padding:10px; width:80%; margin-bottom:10px;">
-      <button class="menu-btn top-btn" onclick="saveRecord()">Зберегти рекорд</button>
-      <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:10px;">Грати знову</button>
+      <h2 style="color:#ffd700">GAME OVER 🗿</h2>
+      <p>Твій результат: <span id="finalScore">0</span></p>
+      <input type="text" id="pName" placeholder="Твій нік" style="padding:12px; width:80%; margin-bottom:15px; border-radius:8px; border:none;">
+      <button class="menu-btn top-btn" onclick="saveRecord()">🚀 ОПУБЛІКУВАТИ</button>
+      <button onclick="location.reload()" style="background:none; color:#aaa; border:none; margin-top:15px;">Спробувати ще</button>
     </div>
   </div>
 
   <div id="leaderBox" class="overlay">
     <div class="content">
-      <h3>🏆 ТОР-10</h3>
-      <div id="leaderList" style="text-align:left; margin-bottom:15px;"></div>
-      <button class="btn" onclick="document.getElementById('leaderBox').style.display='none'">Закрити</button>
+      <h3 style="color:#ffd700">🏆 ТОР-10 ГЕРОЇВ</h3>
+      <div id="leaderList" style="text-align:left; margin: 15px 0; line-height: 1.6;"></div>
+      <button class="menu-btn" style="background:#444; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Назад</button>
     </div>
   </div>
 
   <script>
-    // Налаштування Supabase (твої дані зі скріншотів)
+    // Твої дані Supabase з останніх скріншотів
     const supabaseUrl = 'https://etwbvrrbflvyxkvetsir.supabase.co';
     const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // TON Connect
+    // TON Connect налаштування
     const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
         manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
         buttonRootId: 'ton-connect-button'
@@ -78,25 +78,34 @@
 
     async function sendPayment() {
         const tx = { validUntil: Math.floor(Date.now()/1000)+60, messages: [{address:"UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw", amount:"10000000"}] };
-        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; alert("VIP активовано!"); } catch(e) {}
+        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; alert("VIP активовано! Швидкість збільшена."); } catch(e) { alert("Помилка оплати"); }
     }
 
     async function saveRecord() {
         const wallet = tonConnectUI.wallet;
-        const name = document.getElementById('pName').value || "Анонім";
+        const name = document.getElementById('pName').value || "Гравець";
         const score = parseInt(document.getElementById('finalScore').innerText);
-        if(!wallet) return alert("Підключи гаманець!");
-        const { error } = await _supabase.from('players').upsert([{ wallet: wallet.account.address, username: name, score: score }], { onConflict: 'wallet' });
-        if(!error) { alert("Збережено!"); location.reload(); }
+        if(!wallet) return alert("Спочатку підключи гаманець зверху!");
+        
+        const { error } = await _supabase.from('players').upsert([
+            { wallet: wallet.account.address, username: name, score: score }
+        ], { onConflict: 'wallet' });
+
+        if(error) alert("Помилка: " + error.message);
+        else { alert("Рекорд збережено!"); location.reload(); }
     }
 
     async function showLeaderboard() {
         document.getElementById('leaderBox').style.display='flex';
+        const list = document.getElementById('leaderList');
+        list.innerHTML = "Завантаження...";
         const { data } = await _supabase.from('players').select('username, score').order('score', {ascending: false}).limit(10);
-        document.getElementById('leaderList').innerHTML = data ? data.map((p, i) => `<div>${i+1}. ${p.username}: ${p.score}</div>`).join('') : "Завантаження...";
+        if(data) {
+            list.innerHTML = data.map((p, i) => `<div>${i+1}. <b>${p.username}</b> — ${p.score}</div>`).join('');
+        } else { list.innerHTML = "Поки що рекордів немає"; }
     }
 
-    // ЛОГІКА ГРИ
+    // ЛОГІКА ТЕТРІСУ (Стабільна версія)
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     context.scale(20, 20);
@@ -133,14 +142,6 @@
         });
     }
 
-    function merge(arena, player) {
-        player.matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-            });
-        });
-    }
-
     function collide(arena, player) {
         const [m, o] = [player.matrix, player.pos];
         for (let y = 0; y < m.length; ++y) {
@@ -151,13 +152,20 @@
         return false;
     }
 
+    function merge(arena, player) {
+        player.matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+            });
+        });
+    }
+
     function arenaSweep() {
         outer: for (let y = arena.length - 1; y > 0; --y) {
             for (let x = 0; x < arena[y].length; ++x) if (arena[y][x] === 0) continue outer;
             const row = arena.splice(y, 1)[0].fill(0);
             arena.unshift(row);
             player.score += 10;
-            y++;
         }
         document.getElementById('score').innerText = player.score;
     }
@@ -165,4 +173,57 @@
     function playerDrop() {
         player.pos.y++;
         if (collide(arena, player)) {
-            player
+            player.pos.y--;
+            merge(arena, player);
+            playerReset();
+            arenaSweep();
+        }
+        dropCounter = 0;
+    }
+
+    window.playerMove = function(dir) {
+        player.pos.x += dir;
+        if (collide(arena, player)) player.pos.x -= dir;
+    }
+
+    window.playerRotate = function() {
+        const pos = player.pos.x;
+        let offset = 1;
+        const matrix = player.matrix;
+        for (let y = 0; y < matrix.length; ++y) for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+        matrix.forEach(row => row.reverse());
+        while (collide(arena, player)) {
+            player.pos.x += offset;
+            offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > player.matrix[0].length) { player.pos.x = pos; return; }
+        }
+    }
+
+    function playerReset() {
+        const pieces = 'ILJOTSZ';
+        player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+        player.pos.y = 0;
+        player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+        if (collide(arena, player)) {
+            document.getElementById('finalScore').innerText = player.score;
+            document.getElementById('gameOverBox').style.display = 'flex';
+        }
+    }
+
+    let dropCounter = 0;
+    let dropInterval = 1000;
+    let lastTime = 0;
+    function update(time = 0) {
+        const deltaTime = time - lastTime;
+        lastTime = time;
+        dropCounter += deltaTime;
+        if (dropCounter > dropInterval) playerDrop();
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    playerReset();
+    update();
+  </script>
+</body>
+</html>
