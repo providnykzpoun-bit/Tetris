@@ -9,7 +9,7 @@
   <style>
     body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
     #ton-connect-button { margin: 5px 0; min-height: 40px; }
-    .menu-btn { width: 260px; padding: 10px; margin: 3px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; z-index: 10; }
+    .menu-btn { width: 260px; padding: 10px; margin: 3px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
     #payButton { background: #0088cc; color: white; display: none; }
     .top-btn { background: #ffd700; color: #000; }
     
@@ -59,8 +59,146 @@
   </div>
 
   <div id="rulesBox" class="overlay">
-    <div class="content" style="text-align: left;">
-      <h3 style="color:#ffd700; text-align: center;">📜 ПРАВИЛА</h3>
-      <p style="font-size: 13px;">Фонд формується з VIP-внесків. Виплати ТОП-3 гравцям щонеділі: 1-ше (50%), 2-ге (25%), 3-тє (15%).</p>
-      <button class="menu-btn top-btn" style="width:100%" onclick="document.getElementById('rulesBox').style.display='none'">OK</button>
+    <div class="content">
+      <h3 style="color:#ffd700;">📜 ПРАВИЛА ТУРНІРУ</h3>
+      <p style="text-align: left; font-size: 13px;">
+        1. Фонд формується з VIP-внесків.<br>
+        2. Виплати ТОП-3 гравцям щонеділі о 21:00:<br>
+        🥇 1 місце — 50% банку<br>
+        🥈 2 місце — 25% банку<br>
+        🥉 3 місце — 15% банку<br>
+        3. 10% залишається на наступний турнір.
+      </p>
+      <button class="menu-btn top-btn" style="width:100%" onclick="document.getElementById('rulesBox').style.display='none'">ЗРОЗУМІЛО</button>
     </div>
+  </div>
+
+  <div id="gameOverBox" class="overlay">
+    <div class="content">
+      <h2 style="color:#ffd700">GAME OVER</h2>
+      <p>Очки: <span id="finalScore">0</span></p>
+      <input type="text" id="pName" placeholder="Твій нік" style="padding:10px; width:80%; margin-bottom:10px;">
+      <button class="menu-btn top-btn" onclick="saveRecord()">Зберегти рекорд</button>
+      <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:10px;">Заново</button>
+    </div>
+  </div>
+
+  <div id="leaderBox" class="overlay">
+    <div class="content">
+      <h3>🏆 TOP-10</h3>
+      <div id="leaderList" style="text-align:left; margin-bottom:15px; max-height: 200px; overflow-y: auto;"></div>
+      <button class="menu-btn" style="background:#444; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Закрити</button>
+    </div>
+  </div>
+
+  <script>
+    // --- TON & БАНК ---
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect-button'
+    });
+
+    tonConnectUI.onStatusChange(wallet => {
+        document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
+    });
+
+    const _supabase = window.supabase.createClient('https://etwbvrrbflvyxkvetsir.supabase.co', 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E');
+
+    async function updateJackpot() {
+        try {
+            const res = await fetch('https://toncenter.com/api/v2/getAddressInformation?address=UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw');
+            const data = await res.json();
+            if (data.ok) document.getElementById('jackpot').innerText = (data.result.balance / 1000000000).toFixed(2) + " TON";
+        } catch (e) {}
+    }
+    updateJackpot(); setInterval(updateJackpot, 30000);
+
+    async function sendPayment() {
+        const tx = { validUntil: Math.floor(Date.now()/1000)+60, messages: [{address:"UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw", amount:"10000000"}] };
+        try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
+    }
+
+    // --- ЛОГІКА ТЕТРІСУ (ГРА ПРАЦЮЄ!) ---
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
+    context.scale(20, 20);
+
+    const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+    const arena = Array.from({length: 20}, () => new Array(12).fill(0));
+    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+
+    function createPiece(t) {
+        if(t==='T') return [[0,1,0],[1,1,1],[0,0,0]];
+        if(t==='O') return [[2,2],[2,2]];
+        if(t==='L') return [[0,3,0],[0,3,0],[0,3,3]];
+        if(t==='J') return [[0,4,0],[0,4,0],[4,4,0]];
+        if(t==='I') return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
+        if(t==='S') return [[0,6,6],[6,6,0],[0,0,0]];
+        if(t==='Z') return [[7,7,0],[0,7,7],[0,0,0]];
+    }
+
+    function draw() {
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        drawMatrix(arena, {x:0, y:0});
+        drawMatrix(player.matrix, player.pos);
+    }
+
+    function drawMatrix(m, o) {
+        m.forEach((row, y) => row.forEach((v, x) => {
+            if (v !== 0) { context.fillStyle = colors[v]; context.fillRect(x + o.x, y + o.y, 1, 1); }
+        }));
+    }
+
+    function collide(a, p) {
+        const [m, o] = [p.matrix, p.pos];
+        for (let y = 0; y < m.length; ++y) {
+            for (let x = 0; x < m[y].length; ++x) {
+                if (m[y][x] !== 0 && (a[y+o.y] && a[y+o.y][x+o.x]) !== 0) return true;
+            }
+        }
+        return false;
+    }
+
+    function merge(a, p) {
+        p.matrix.forEach((row, y) => row.forEach((v, x) => {
+            if (v !== 0) a[y + p.pos.y][x + p.pos.x] = v;
+        }));
+    }
+
+    window.playerDrop = function() {
+        player.pos.y++;
+        if (collide(arena, player)) {
+            player.pos.y--; merge(arena, player); playerReset(); arenaSweep();
+        }
+        dropCounter = 0;
+    }
+
+    window.playerMove = function(d) {
+        player.pos.x += d;
+        if (collide(arena, player)) player.pos.x -= d;
+    }
+
+    window.playerRotate = function() {
+        const pos = player.pos.x; let offset = 1;
+        const m = player.matrix;
+        for (let y = 0; y < m.length; ++y) for (let x = 0; x < y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+        m.forEach(r => r.reverse());
+        while (collide(arena, player)) {
+            player.pos.x += offset; offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > m[0].length) { player.pos.x = pos; return; }
+        }
+    }
+
+    function arenaSweep() {
+        outer: for (let y = arena.length - 1; y > 0; --y) {
+            for (let x = 0; x < arena[y].length; ++x) if (arena[y][x] === 0) continue outer;
+            arena.unshift(arena.splice(y, 1)[0].fill(0));
+            player.score += 10;
+        }
+        document.getElementById('score').innerText = player.score;
+    }
+
+    function playerReset() {
+        const p = 'ILJOTSZ';
+        player.matrix = createPiece(
