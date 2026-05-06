@@ -8,38 +8,17 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     body { background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; }
-    
-    #ton-connect-button { margin-bottom: 5px; scale: 0.9; }
-    
+    #ton-connect-button { margin-bottom: 5px; scale: 0.85; }
     .menu-btn { width: 260px; padding: 10px; margin: 3px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
     #payButton { background: #0088cc; color: white; display: none; }
     .top-btn { background: #ffd700; color: #000; }
-
     .header { display: flex; gap: 10px; margin-bottom: 5px; }
     .stat-box { text-align: center; background: #333; padding: 5px 12px; border-radius: 8px; border: 1px solid #444; }
-    .label { font-size: 10px; color: #aaa; }
     .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
-
     canvas { border: 2px solid #555; background: #000; width: 220px; height: 380px; border-radius: 10px; }
-
-    /* Кнопки в один ряд */
     .controls { display: flex; justify-content: center; gap: 8px; margin-top: 10px; width: 100%; }
-    .btn { 
-      background: #333; 
-      border: 2px solid #555; 
-      color: white; 
-      width: 55px; 
-      height: 55px; 
-      border-radius: 12px; 
-      font-size: 20px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      user-select: none;
-      touch-action: manipulation;
-    }
-    .btn:active { background: #555; scale: 0.95; }
-
+    .btn { background: #333; border: 2px solid #555; color: white; width: 58px; height: 58px; border-radius: 15px; font-size: 22px; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .btn:active { background: #555; scale: 0.9; }
     .overlay { display:none; background: rgba(0,0,0,0.95); position: fixed; top:0; left:0; width:100%; height:100%; z-index:100; flex-direction: column; align-items: center; justify-content: center; }
     .content { background: #222; padding: 20px; border-radius: 15px; width: 85%; text-align: center; border: 1px solid #ffd700; }
   </style>
@@ -51,38 +30,55 @@
   <button class="menu-btn top-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
 
   <div class="header">
-    <div class="stat-box"><div class="label">SCORE</div><div id="score" class="value">0</div></div>
-    <div class="stat-box"><div class="label">BEST</div><div id="best" class="value">0</div></div>
+    <div class="stat-box"><div>SCORE</div><div id="score" class="value">0</div></div>
+    <div class="stat-box"><div>BEST</div><div id="best" class="value">0</div></div>
   </div>
 
   <canvas id="tetris" width="240" height="400"></canvas>
 
   <div class="controls">
-    <div class="btn" onclick="playerMove(-1)">⬅️</div>
-    <div class="btn" onclick="playerRotate()">🔄</div>
-    <div class="btn" onclick="playerDrop()">⬇️</div>
-    <div class="btn" onclick="playerMove(1)">➡️</div>
+    <div class="btn" onpointerdown="doMove(-1)">⬅️</div>
+    <div class="btn" onpointerdown="doRotate()">🔄</div>
+    <div class="btn" onpointerdown="doDrop()">⬇️</div>
+    <div class="btn" onpointerdown="doMove(1)">➡️</div>
   </div>
 
   <div id="gameOverBox" class="overlay">
     <div class="content">
-      <h2 style="color:#ffd700">GAME OVER</h2>
+      <h2 style="color:#ffd700">GAME OVER 🗿</h2>
       <p>Очки: <span id="finalScore">0</span></p>
       <input type="text" id="pName" placeholder="Твій нік" style="padding:12px; width:80%; margin-bottom:15px; border-radius:8px; border:none;">
-      <button class="menu-btn top-btn" onclick="saveRecord()">🚀 ЗБЕРЕГТИ</button>
+      <button class="menu-btn top-btn" onclick="saveRecord()">🚀 ОПУБЛІКУВАТИ</button>
       <button onclick="location.reload()" style="background:none; color:#aaa; border:none; margin-top:10px;">Заново</button>
     </div>
   </div>
 
   <div id="leaderBox" class="overlay">
     <div class="content">
-      <h3 style="color:#ffd700">🏆 ТОР-10</h3>
-      <div id="leaderList" style="text-align:left; margin-bottom:15px; font-size: 14px;"></div>
-      <button class="menu-btn" style="background:#444; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Закрити</button>
+      <h3 style="color:#ffd700">🏆 ТОР-10 ГЕРОЇВ</h3>
+      <div id="leaderList" style="text-align:left; margin-bottom:15px; font-size:14px;"></div>
+      <button class="menu-btn" style="background:#444; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Назад</button>
     </div>
   </div>
 
   <script>
+    // --- ЗВУКОВА СИСТЕМА (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(f, type="square", d=0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + d);
+    }
+
+    // --- SUPABASE & TON ---
     const supabaseUrl = 'https://etwbvrrbflvyxkvetsir.supabase.co';
     const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
     const _supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -98,7 +94,7 @@
 
     async function sendPayment() {
         const tx = { validUntil: Math.floor(Date.now()/1000)+60, messages: [{address:"UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw", amount:"10000000"}] };
-        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; alert("VIP активовано!"); } catch(e) {}
+        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; playSound(800, "sine", 0.5); } catch(e) {}
     }
 
     async function saveRecord() {
@@ -107,136 +103,16 @@
         const score = parseInt(document.getElementById('finalScore').innerText);
         if(!wallet) return alert("Підключи гаманець!");
         const { error } = await _supabase.from('players').upsert([{ wallet: wallet.account.address, username: name, score: score }], { onConflict: 'wallet' });
-        if(!error) { alert("Збережено!"); location.reload(); }
+        if(!error) { playSound(600, "sine", 0.3); alert("Збережено!"); location.reload(); }
     }
 
     async function showLeaderboard() {
         document.getElementById('leaderBox').style.display='flex';
         const list = document.getElementById('leaderList');
-        list.innerHTML = "Завантаження...";
         const { data } = await _supabase.from('players').select('username, score').order('score', {ascending: false}).limit(10);
         if(data) list.innerHTML = data.map((p, i) => `<div>${i+1}. <b>${p.username}</b>: ${p.score}</div>`).join('');
     }
 
-    // ЛОГІКА ТЕТРІСУ
+    // --- ЛОГІКА ТЕТРІСУ ---
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
-    context.scale(20, 20);
-
-    function createPiece(t) {
-        if (t === 'T') return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
-        if (t === 'O') return [[2, 2], [2, 2]];
-        if (t === 'L') return [[0, 3, 0], [0, 3, 0], [0, 3, 3]];
-        if (t === 'J') return [[0, 4, 0], [0, 4, 0], [4, 4, 0]];
-        if (t === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
-        if (t === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
-        if (t === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
-    }
-
-    const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-    const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-    const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
-
-    function draw() {
-        context.fillStyle = '#000';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        drawMatrix(arena, {x: 0, y: 0});
-        drawMatrix(player.matrix, player.pos);
-    }
-
-    function drawMatrix(matrix, offset) {
-        matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value !== 0) {
-                    context.fillStyle = colors[value];
-                    context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                }
-            });
-        });
-    }
-
-    function collide(arena, player) {
-        const [m, o] = [player.matrix, player.pos];
-        for (let y = 0; y < m.length; ++y) {
-            for (let x = 0; x < m[y].length; ++x) {
-                if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
-            }
-        }
-        return false;
-    }
-
-    function merge(arena, player) {
-        player.matrix.forEach((row, y) => {
-            row.forEach((value, x) => {
-                if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-            });
-        });
-    }
-
-    function arenaSweep() {
-        outer: for (let y = arena.length - 1; y > 0; --y) {
-            for (let x = 0; x < arena[y].length; ++x) if (arena[y][x] === 0) continue outer;
-            const row = arena.splice(y, 1)[0].fill(0);
-            arena.unshift(row);
-            player.score += 10;
-        }
-        document.getElementById('score').innerText = player.score;
-    }
-
-    function playerDrop() {
-        player.pos.y++;
-        if (collide(arena, player)) {
-            player.pos.y--;
-            merge(arena, player);
-            playerReset();
-            arenaSweep();
-        }
-        dropCounter = 0;
-    }
-
-    window.playerMove = function(dir) {
-        player.pos.x += dir;
-        if (collide(arena, player)) player.pos.x -= dir;
-    }
-
-    window.playerRotate = function() {
-        const pos = player.pos.x;
-        let offset = 1;
-        const matrix = player.matrix;
-        for (let y = 0; y < matrix.length; ++y) for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-        matrix.forEach(row => row.reverse());
-        while (collide(arena, player)) {
-            player.pos.x += offset;
-            offset = -(offset + (offset > 0 ? 1 : -1));
-            if (offset > player.matrix[0].length) { player.pos.x = pos; return; }
-        }
-    }
-
-    function playerReset() {
-        const pieces = 'ILJOTSZ';
-        player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-        player.pos.y = 0;
-        player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-        if (collide(arena, player)) {
-            document.getElementById('finalScore').innerText = player.score;
-            document.getElementById('gameOverBox').style.display = 'flex';
-        }
-    }
-
-    let dropCounter = 0;
-    let dropInterval = 1000;
-    let lastTime = 0;
-    function update(time = 0) {
-        const deltaTime = time - lastTime;
-        lastTime = time;
-        dropCounter += deltaTime;
-        if (dropCounter > dropInterval) playerDrop();
-        draw();
-        requestAnimationFrame(update);
-    }
-
-    playerReset();
-    update();
-  </script>
-</body>
-</html>
