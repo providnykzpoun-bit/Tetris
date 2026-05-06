@@ -3,52 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UA TETRIS 🗿</title>
+    <title>UA TETRIS 🗿 LIVE</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-        #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
-        .top-info-row { display: flex; gap: 5px; width: 280px; margin-bottom: 5px; align-items: stretch; }
-        .mini-btn { flex: 1.2; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; display: none; background: #0088cc; color: white; }
-        .mini-jackpot { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
-        .jackpot-label { font-size: 8px; color: #ffd700; text-transform: uppercase; }
-        .jackpot-value { font-size: 14px; color: #ffd700; font-weight: bold; }
-        .top-btn { width: 280px; background: #ffd700; color: #000; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; margin-bottom: 5px; cursor: pointer; }
-        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .side-btn { background: #333; border: 1px solid #444; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
-        .stats-row { display: flex; gap: 5px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
-        .label { font-size: 8px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 14px; font-weight: bold; color: #00d4ff; }
-        canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
-        .controls { display: flex; gap: 8px; margin-top: 10px; width: 100%; justify-content: center; }
-        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
-        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
-        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
-        .list-style { text-align: left; font-size: 13px; color: #ccc; margin: 15px 0; font-family: monospace; }
+        :root { --accent: #ffd700; --bg: #111; --panel: #1a1a1a; }
+        body { background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
+        
+        #ton-connect-button { margin-bottom: 5px; width: 300px; min-height: 44px; }
+        
+        .top-row { display: flex; gap: 5px; width: 300px; margin-bottom: 5px; }
+        .mini-jackpot { flex: 1; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; text-align: center; padding: 4px; }
+        .mini-btn { flex: 1; background: #0088cc; color: white; border: none; border-radius: 8px; font-weight: bold; display: none; cursor: pointer; }
+
+        .score-box { display: flex; gap: 10px; margin-bottom: 5px; width: 300px; }
+        .stat { flex: 1; background: #222; border-radius: 8px; text-align: center; padding: 5px; border: 1px solid #333; }
+        .val { font-size: 16px; font-weight: bold; color: #00d4ff; }
+
+        canvas { border: 2px solid #444; background: #000; height: 42vh; border-radius: 8px; }
+
+        .leaderboard-mini { width: 300px; background: rgba(255,255,255,0.05); margin-top: 8px; border-radius: 8px; padding: 5px; font-size: 11px; }
+        .leader-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid #333; }
+
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; width: 310px; }
+        .btn { background: #333; border: 1px solid #444; color: white; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .btn:active { background: #555; }
+
+        .overlay { display:none; background: rgba(0,0,0,0.95); position: fixed; inset: 0; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        .content { background: var(--panel); padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid var(--accent); }
+        input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; box-sizing: border-box; text-align: center; font-size: 16px; }
+        .top-btn { width: 100%; background: var(--accent); color: #000; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="ton-connect-button"></div>
     
-    <div class="top-info-row">
+    <div class="top-row">
         <button id="payButton" class="mini-btn" onclick="sendPayment()">🔓 VIP (0.01 TON)</button>
         <div class="mini-jackpot">
-            <div class="jackpot-label">Призовий фонд</div>
-            <div id="jackpot" class="jackpot-value">0.00 TON</div>
+            <div style="font-size: 8px; color: var(--accent);">ФОНД</div>
+            <div id="jackpot" style="font-size: 14px;">0.00 TON</div>
         </div>
     </div>
 
-    <button class="top-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
-
-    <div class="score-panel">
-        <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
-        <div class="stats-row">
-            <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
-            <div class="stat-box"><div class="label">Рекорд</div><div id="best" class="value">0</div></div>
-        </div>
-        <div class="side-btn" onclick="showRules()">?</div>
+    <div class="score-box">
+        <div class="stat"><div id="score" class="val">0</div></div>
+        <div class="stat"><div id="best" class="val">0</div></div>
     </div>
 
     <canvas id="tetris" width="240" height="400"></canvas>
@@ -60,167 +61,202 @@
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
     </div>
 
-    <div id="infoBox" class="overlay">
-        <div class="content">
-            <h3 id="infoTitle" style="color:#ffd700; margin-top:0;"></h3>
-            <div id="infoList" class="list-style"></div>
-            <button class="top-btn" onclick="document.getElementById('infoBox').style.display='none'">ЗАКРИТИ</button>
-        </div>
+    <div class="leaderboard-mini" id="leaderList">
+        <div style="text-align:center; color:var(--accent); margin-bottom:3px;">🏆 ТОП ГРАВЦІВ</div>
+        <div style="text-align:center; color:#666;">Завантаження...</div>
     </div>
 
     <div id="gameOverBox" class="overlay">
         <div class="content">
-            <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
-            <p>Ваш рахунок: <span id="finalScore">0</span></p>
-            <button class="top-btn" onclick="location.reload()">ГРАТИ ЗНОВУ</button>
+            <h2 style="color:#ff4444; margin-top:0;">ГРА ЗАКІНЧЕНА</h2>
+            <p>Результат: <span id="finalScore" style="color:#00d4ff; font-weight:bold;">0</span></p>
+            <input type="text" id="playerName" placeholder="Твій нік" maxlength="12">
+            <button id="saveBtn" class="top-btn" onclick="saveRecord()">ЗБЕРЕГТИ РЕКОРД</button>
         </div>
     </div>
 
     <script>
-        const SB_URL = "https://etwbvrrbfivykvetsir.supabase.co";
-        const SB_KEY = "Sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E";
+        // ДАНІ ВСТАВЛЕНО АВТОМАТИЧНО
+        const supabaseUrl = 'https://etwbvrbfivyxxkvetsir.supabase.co'; 
+        const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Завантаження лідерів
+        async function loadLeaders() {
+            try {
+                const { data } = await _supabase
+                    .from('leaderboard')
+                    .select('player_name, score')
+                    .order('score', { ascending: false })
+                    .limit(5);
+                
+                if (data) {
+                    const list = document.getElementById('leaderList');
+                    list.innerHTML = '<div style="text-align:center; color:var(--accent); margin-bottom:3px;">🏆 ТОП ГРАВЦІВ</div>';
+                    data.forEach((item, index) => {
+                        list.innerHTML += `<div class="leader-item">
+                            <span>${index+1}. ${item.player_name}</span>
+                            <span style="color:#00d4ff">${item.score}</span>
+                        </div>`;
+                    });
+                }
+            } catch (e) { console.log(e); }
+        }
+        loadLeaders();
+
+        // Збереження рекорду
+        async function saveRecord() {
+            const name = document.getElementById('playerName').value.trim() || "Гравець";
+            const score = player.score;
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "ЗБЕРІГАЄМО...";
+            btn.disabled = true;
+
+            const { error } = await _supabase
+                .from('leaderboard')
+                .insert([{ player_name: name, score: score }]);
+
+            if (!error) {
+                location.reload();
+            } else { 
+                alert("Помилка збереження! Перевірте RLS в Supabase."); 
+                btn.disabled = false; 
+                btn.innerText = "ПОВТОРИТИ"; 
+            }
+        }
+
+        // --- ЛОГІКА TETRIS ---
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        context.scale(20, 20);
+
+        function createPiece(type) {
+            if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
+            if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
+            if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
+            if (type === 'O') return [[4,4],[4,4]];
+            if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
+            if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
+            if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
+        }
+
+        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
+        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
+        function arenaSweep() {
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) {
+                    if (arena[y][x] === 0) continue outer;
+                }
+                arena.splice(y, 1);
+                arena.unshift(new Array(12).fill(0));
+                player.score += 10;
+            }
+            document.getElementById('score').innerText = player.score;
+        }
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length/2|0) - (player.matrix[0].length/2|0);
+            if (collide(arena, player)) {
+                document.getElementById('finalScore').innerText = player.score;
+                document.getElementById('gameOverBox').style.display = 'flex';
+                cancelAnimationFrame(animationId);
+            }
+        }
+
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(dir) {
+            player.pos.x += dir;
+            if (collide(arena, player)) player.pos.x -= dir;
+        }
+
+        function playerRotate() {
+            const matrix = player.matrix;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            matrix.forEach(row => row.reverse());
+            if (collide(arena, player)) {
+                matrix.forEach(row => row.reverse());
+                for (let y = 0; y < matrix.length; ++y) {
+                    for (let x = 0; x < y; ++x) {
+                        [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                    }
+                }
+            }
+        }
+
+        let dropCounter = 0;
+        let lastTime = 0;
+        let animationId;
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            dropCounter += deltaTime;
+            if (dropCounter > 1000) playerDrop();
+            draw();
+            animationId = requestAnimationFrame(update);
+        }
 
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        tonConnectUI.onStatusChange(wallet => {
-            document.getElementById('payButton').style.display = wallet ? 'block' : 'none';
-        });
-
-        async function updateJackpot() {
-            try {
-                const res = await fetch('https://toncenter.com/api/v2/getAddressInformation?address=UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw');
-                const data = await res.json();
-                if (data.ok) {
-                    const fundOnly = Math.max(0, (data.result.balance / 1e9) - 2.14); 
-                    document.getElementById('jackpot').innerText = fundOnly.toFixed(2) + " TON";
-                }
-            } catch (e) {}
-        }
-        updateJackpot();
-
-        async function saveScore(score) {
-            const wallet = tonConnectUI.account?.address;
-            if (!wallet || score < 10) return;
-            const shortAddr = wallet.substring(0, 6) + "..." + wallet.slice(-4);
-            try {
-                await fetch(`${SB_URL}/rest/v1/leaderboard`, {
-                    method: 'POST',
-                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({ player_name: shortAddr, score: score, wallet: wallet })
-                });
-            } catch (e) {}
-        }
-
-        async function showLeaderboard() {
-            const box = document.getElementById('infoBox');
-            const list = document.getElementById('infoList');
-            document.getElementById('infoTitle').innerText = "🏆 ТОР ГРАВЦІВ";
-            box.style.display = 'flex';
-            list.innerHTML = "Завантаження...";
-            try {
-                const res = await fetch(`${SB_URL}/rest/v1/leaderboard?select=*&order=score.desc&limit=10`, {
-                    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
-                });
-                const data = await res.json();
-                list.innerHTML = data.map((i, n) => `${n+1}. ${i.player_name} — ${i.score}`).join('<br><br>');
-            } catch (e) { list.innerHTML = "Помилка бази даних"; }
-        }
-
-        function showRules() {
-            document.getElementById('infoBox').style.display = 'flex';
-            document.getElementById('infoTitle').innerText = "ЯК ГРАТИ?";
-            document.getElementById('infoList').innerHTML = "• Лінія = 10 очок<br>• VIP дає шанс на виграш<br>• ТОР показує найкращих";
-        }
-
-        async function sendPayment() {
-            const tx = { validUntil: Math.floor(Date.now()/1000)+60, messages: [{address:"UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw", amount:"10000000"}]};
-            try { await tonConnectUI.sendTransaction(tx); } catch(e) {}
-        }
-
-        // --- ЛОГІКА ТЕТРІСУ ---
-        let isSoundOn = true;
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, type, duration) {
-            if (!isSoundOn) return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-        }
-        function toggleSound() { isSoundOn = !isSoundOn; document.getElementById('soundBtn').innerText = isSoundOn ? '🔊' : '🔈'; }
-
-        const canvas = document.getElementById('tetris');
-        const context = canvas.getContext('2d');
-        context.scale(20, 20);
-
-        function createPiece(t) {
-            if (t === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
-            if (t === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
-            if (t === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
-            if (t === 'O') return [[4,4],[4,4]];
-            if (t === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
-            if (t === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
-            if (t === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
-        }
-
-        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
-        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-        let highScore = localStorage.getItem('tetrisBest') || 0;
-        document.getElementById('best').innerText = highScore;
-
-        function arenaSweep() {
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
-                arena.unshift(arena.splice(y, 1)[0].fill(0)); ++y;
-                player.score += 10; playTone(600, 'square', 0.2);
-            }
-            document.getElementById('score').innerText = player.score;
-            if (player.score > highScore) { highScore = player.score; localStorage.setItem('tetrisBest', highScore); document.getElementById('best').innerText = highScore; }
-        }
-
-        function draw() {
-            context.fillStyle = '#000'; context.fillRect(0, 0, canvas.width, canvas.height);
-            drawM(arena, {x:0, y:0}); drawM(player.matrix, player.pos);
-        }
-        function drawM(m, o) {
-            m.forEach((r, y) => r.forEach((v, x) => { if (v !== 0) { context.fillStyle = colors[v]; context.fillRect(x + o.x, y + o.y, 1, 1); }}));
-        }
-        function collide(a, p) {
-            const [m, o] = [p.matrix, p.pos];
-            for (let y = 0; y < m.length; ++y) for (let x = 0; x < m[y].length; ++x)
-                if (m[y][x] !== 0 && (a[y+o.y] && a[y+o.y][x+o.x]) !== 0) return true;
-            return false;
-        }
-        function merge(a, p) { p.matrix.forEach((r, y) => r.forEach((v, x) => { if (v !== 0) a[y+p.pos.y][x+p.pos.x] = v; })); playTone(200, 'sine', 0.1); }
-        function playerReset() {
-            const ps = 'ILJOTSZ'; player.matrix = createPiece(ps[ps.length * Math.random() | 0]);
-            player.pos.y = 0; player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            if (collide(arena, player)) {
-                document.getElementById('finalScore').innerText = player.score;
-                document.getElementById('gameOverBox').style.display = 'flex';
-                saveScore(player.score); // Відправка в Supabase
-                cancelAnimationFrame(animId);
-            }
-        }
-        function playerDrop() { player.pos.y++; if (collide(arena, player)) { player.pos.y--; merge(arena, player); playerReset(); arenaSweep(); } dCnt = 0; }
-        function playerMove(d) { player.pos.x += d; if (collide(arena, player)) player.pos.x -= d; else playTone(400, 'sine', 0.05); }
-        function playerRotate() {
-            const p = player.pos.x; let o = 1; const m = player.matrix;
-            for (let y = 0; y < m.length; ++y) for (let x = 0; x < y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
-            m.forEach(r => r.reverse());
-            while (collide(arena, player)) { player.pos.x += o; o = -(o + (o > 0 ? 1 : -1)); if (o > m[0].length) { player.pos.x = p; return; } }
-            playTone(500, 'sine', 0.05);
-        }
-
-        let dCnt = 0, lTime = 0, animId;
-        function update(t = 0) { dCnt += t - lTime; lTime = t; if (dCnt > 1000) playerDrop(); draw(); animId = requestAnimationFrame(update); }
-        playerReset(); update();
+        playerReset();
+        update();
     </script>
 </body>
 </html>
