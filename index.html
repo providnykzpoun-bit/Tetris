@@ -8,25 +8,24 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-    #ton-connect-button { margin: 5px 0; transform: scale(0.9); }
-    .menu-btn { width: 260px; padding: 10px; margin: 3px 0; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; }
+    #ton-connect-button { margin: 5px 0; }
+    .menu-btn { width: 260px; padding: 10px; margin: 3px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
     #payButton { background: #0088cc; color: white; display: none; }
     .top-btn { background: #ffd700; color: #000; }
     .header { display: flex; gap: 10px; margin-bottom: 5px; }
-    .stat-box { text-align: center; background: #222; padding: 5px 15px; border-radius: 8px; border: 1px solid #333; }
-    .value { font-size: 18px; font-weight: bold; color: #00d4ff; }
-    canvas { border: 2px solid #444; background: #000; width: 220px; height: 380px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-    .controls { display: flex; justify-content: center; gap: 6px; margin-top: 15px; width: 100%; }
-    .btn { background: #2a2a2a; border: 2px solid #444; color: white; width: 60px; height: 60px; border-radius: 15px; font-size: 24px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn:active { background: #444; transform: scale(0.9); }
-    .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:100; flex-direction: column; align-items: center; justify-content: center; }
-    .content { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 80%; text-align: center; border: 1px solid #ffd700; }
+    .stat-box { text-align: center; background: #222; padding: 5px 12px; border-radius: 8px; border: 1px solid #333; }
+    .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
+    canvas { border: 2px solid #444; background: #000; width: 220px; height: 380px; border-radius: 10px; }
+    .controls { display: flex; justify-content: center; gap: 8px; margin-top: 10px; width: 100%; }
+    .btn { background: #333; border: 2px solid #555; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .overlay { display:none; background: rgba(0,0,0,0.95); position: fixed; top:0; left:0; width:100%; height:100%; z-index:100; flex-direction: column; align-items: center; justify-content: center; }
+    .content { background: #222; padding: 20px; border-radius: 15px; width: 85%; text-align: center; border: 1px solid #ffd700; }
   </style>
 </head>
-<body onclick="initAudio()">
+<body>
 
   <div id="ton-connect-button"></div>
-  <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 Відкрити VIP Level (0.01 TON)</button>
+  <button id="payButton" class="menu-btn" onclick="sendPayment()">🔓 VIP Level (0.01 TON)</button>
   <button class="menu-btn top-btn" onclick="showLeaderboard()">🏆 ТОР ГРАВЦІВ</button>
 
   <div class="header">
@@ -47,32 +46,29 @@
     <div class="content">
       <h2 style="color:#ffd700">GAME OVER</h2>
       <p>Очки: <span id="finalScore">0</span></p>
-      <input type="text" id="pName" placeholder="Твій нік" style="padding:12px; width:85%; margin-bottom:15px; border-radius:8px; border:none; background:#333; color:white;">
-      <button class="menu-btn top-btn" onclick="saveRecord()">💾 ЗБЕРЕГТИ</button>
-      <button onclick="location.reload()" style="background:none; color:#777; border:none; margin-top:15px;">Спробувати ще</button>
+      <input type="text" id="pName" placeholder="Твій нік" style="padding:10px; width:80%; margin-bottom:10px;">
+      <button class="menu-btn top-btn" onclick="saveRecord()">Зберегти рекорд</button>
+      <button onclick="location.reload()" style="background:none; color:white; border:none; margin-top:10px;">Заново</button>
     </div>
   </div>
 
   <div id="leaderBox" class="overlay">
     <div class="content">
-      <h3 style="color:#ffd700">🏆 TOP PLAYERS</h3>
-      <div id="leaderList" style="text-align:left; margin-bottom:15px; font-size:14px; max-height:200px; overflow-y:auto;"></div>
-      <button class="menu-btn" style="background:#333; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Назад</button>
+      <h3>🏆 TOP-10</h3>
+      <div id="leaderList" style="text-align:left; margin-bottom:15px;"></div>
+      <button class="menu-btn" style="background:#444; color:white;" onclick="document.getElementById('leaderBox').style.display='none'">Закрити</button>
     </div>
   </div>
 
   <script>
     // --- ЗВУК ---
     let audioCtx = null;
-    function initAudio() { if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    function beep(f, type="square", d=0.1) {
-        if (!audioCtx) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+    function playBeep(f, d=0.1) {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        osc.type = type;
         osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
         osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + d);
@@ -94,25 +90,25 @@
 
     async function sendPayment() {
         const tx = { validUntil: Math.floor(Date.now()/1000)+60, messages: [{address:"UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw", amount:"10000000"}] };
-        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; beep(800, "sine", 0.5); } catch(e) {}
+        try { await tonConnectUI.sendTransaction(tx); dropInterval = 400; playBeep(800); } catch(e) {}
     }
 
     async function saveRecord() {
         const wallet = tonConnectUI.wallet;
-        const name = document.getElementById('pName').value || "UA_User";
+        const name = document.getElementById('pName').value || "Анонім";
         const score = parseInt(document.getElementById('finalScore').innerText);
         if(!wallet) return alert("Підключи гаманець!");
-        const { error } = await _supabase.from('players').upsert([{ wallet: wallet.account.address, username: name, score: score }], { onConflict: 'wallet' });
-        if(!error) { beep(600, "sine", 0.3); alert("Збережено!"); location.reload(); }
+        await _supabase.from('players').upsert([{ wallet: wallet.account.address, username: name, score: score }], { onConflict: 'wallet' });
+        location.reload();
     }
 
     async function showLeaderboard() {
         document.getElementById('leaderBox').style.display='flex';
         const { data } = await _supabase.from('players').select('username, score').order('score', {ascending: false}).limit(10);
-        document.getElementById('leaderList').innerHTML = data ? data.map((p, i) => `<div>${i+1}. ${p.username}: ${p.score}</div>`).join('') : "Завантаження...";
+        document.getElementById('leaderList').innerHTML = data ? data.map(p => `<div>${p.username}: ${p.score}</div>`).join('') : "Пусто";
     }
 
-    // --- ГРА ---
+    // --- ЛОГІКА ГРИ ---
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     context.scale(20, 20);
@@ -122,19 +118,19 @@
     const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
     function createPiece(t) {
-        if (t === 'T') return [[0, 1, 0], [1, 1, 1], [0, 0, 0]];
-        if (t === 'O') return [[2, 2], [2, 2]];
-        if (t === 'L') return [[0, 3, 0], [0, 3, 0], [0, 3, 3]];
-        if (t === 'J') return [[0, 4, 0], [0, 4, 0], [4, 4, 0]];
-        if (t === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
-        if (t === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
-        if (t === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+        if(t==='T') return [[0,1,0],[1,1,1],[0,0,0]];
+        if(t==='O') return [[2,2],[2,2]];
+        if(t==='L') return [[0,3,0],[0,3,0],[0,3,3]];
+        if(t==='J') return [[0,4,0],[0,4,0],[4,4,0]];
+        if(t==='I') return [[0,5,0,0],[0,5,0,0],[0,5,0,0],[0,5,0,0]];
+        if(t==='S') return [[0,6,6],[6,6,0],[0,0,0]];
+        if(t==='Z') return [[7,7,0],[0,7,7],[0,0,0]];
     }
 
     function draw() {
         context.fillStyle = '#000';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        drawMatrix(arena, {x: 0, y: 0});
+        drawMatrix(arena, {x:0, y:0});
         drawMatrix(player.matrix, player.pos);
     }
 
@@ -146,3 +142,76 @@
 
     function collide(a, p) {
         const [m, o] = [p.matrix, p.pos];
+        for (let y = 0; y < m.length; ++y) {
+            for (let x = 0; x < m[y].length; ++x) {
+                if (m[y][x] !== 0 && (a[y+o.y] && a[y+o.y][x+o.x]) !== 0) return true;
+            }
+        }
+        return false;
+    }
+
+    function merge(a, p) {
+        p.matrix.forEach((row, y) => row.forEach((v, x) => {
+            if (v !== 0) a[y + p.pos.y][x + p.pos.x] = v;
+        }));
+    }
+
+    window.playerDrop = function() {
+        player.pos.y++;
+        if (collide(arena, player)) {
+            player.pos.y--; merge(arena, player); playerReset(); arenaSweep(); playBeep(150);
+        }
+        dropCounter = 0;
+    }
+
+    window.playerMove = function(d) {
+        player.pos.x += d;
+        if (collide(arena, player)) player.pos.x -= d; else playBeep(250, 0.05);
+    }
+
+    window.playerRotate = function() {
+        const pos = player.pos.x; let offset = 1;
+        const m = player.matrix;
+        for (let y = 0; y < m.length; ++y) for (let x = 0; x < y; ++x) [m[x][y], m[y][x]] = [m[y][x], m[x][y]];
+        m.forEach(r => r.reverse());
+        while (collide(arena, player)) {
+            player.pos.x += offset; offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > m[0].length) { player.pos.x = pos; return; }
+        }
+        playBeep(350, 0.05);
+    }
+
+    function arenaSweep() {
+        outer: for (let y = arena.length - 1; y > 0; --y) {
+            for (let x = 0; x < arena[y].length; ++x) if (arena[y][x] === 0) continue outer;
+            arena.unshift(arena.splice(y, 1)[0].fill(0));
+            player.score += 10; y++; playBeep(500, 0.2);
+        }
+        document.getElementById('score').innerText = player.score;
+    }
+
+    function playerReset() {
+        const p = 'ILJOTSZ';
+        player.matrix = createPiece(p[p.length * Math.random() | 0]);
+        player.pos.y = 0;
+        player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+        if (collide(arena, player)) {
+            document.getElementById('finalScore').innerText = player.score;
+            document.getElementById('gameOverBox').style.display = 'flex';
+            player.score = 0;
+        }
+    }
+
+    let dropCounter = 0, dropInterval = 1000, lastTime = 0;
+    function update(time = 0) {
+        const dt = time - lastTime; lastTime = time;
+        dropCounter += dt;
+        if (dropCounter > dropInterval) playerDrop();
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    playerReset(); update();
+  </script>
+</body>
+</html>
