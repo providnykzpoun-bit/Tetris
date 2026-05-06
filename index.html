@@ -5,27 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UA TETRIS 🗿</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         
         #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
 
         .top-info-row { display: flex; gap: 5px; width: 280px; margin-bottom: 5px; align-items: stretch; }
-        .mini-btn { flex: 1.2; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 11px; cursor: pointer; display: none; background: #0088cc; color: white; }
+        .mini-btn { flex: 1.5; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 10px; cursor: pointer; display: none; background: #0088cc; color: white; text-transform: uppercase; }
+        
         .mini-jackpot { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
         .jackpot-label { font-size: 8px; color: #ffd700; text-transform: uppercase; }
         .jackpot-value { font-size: 14px; color: #ffd700; font-weight: bold; }
 
-        .top-btn { width: 280px; background: #ffd700; color: #000; padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+        .top-btn { width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 13px; margin-bottom: 5px; cursor: pointer; }
 
+        /* ВАШІ ЛІЧИЛЬНИКИ ТУТ */
         .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .side-btn { background: #333; border: 1px solid #444; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
         
         .stats-row { display: flex; gap: 5px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
+        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 75px; text-align: center; }
         .label { font-size: 8px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 14px; font-weight: bold; color: #00d4ff; }
+        .value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
         canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
         
@@ -35,8 +36,6 @@
 
         .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
         .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
-        .rules-list { text-align: left; font-size: 13px; line-height: 1.5; color: #ccc; margin: 15px 0; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -44,14 +43,14 @@
     <div id="ton-connect-button"></div>
     
     <div class="top-info-row">
-        <button id="payButton" class="mini-btn" onclick="sendPayment()">🔓 VIP (0.01 TON)</button>
+        <button id="payButton" class="mini-btn" onclick="sendPayment()">🔄 ПРОДОВЖИТИ НА ІНШОМУ РІВНІ</button>
         <div class="mini-jackpot">
-            <div class="jackpot-label">Призовий фонд</div>
+            <div class="jackpot-label">ФОНД</div>
             <div id="jackpot" class="jackpot-value">0.00 TON</div>
         </div>
     </div>
 
-    <button class="top-btn" onclick="location.reload()">🏆 ОНОВИТИ ТОП</button>
+    <button class="top-btn" onclick="location.reload()">НОВА ГРА 🎮</button>
 
     <div class="score-panel">
         <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
@@ -73,33 +72,21 @@
 
     <div id="rulesBox" class="overlay">
         <div class="content">
-            <h3 style="color:#ffd700; margin-top:0;">ЯК ГРАТИ?</h3>
-            <div class="rules-list">
-                • Складайте лінії, щоб отримувати очки.<br>
-                • Кожна лінія = 10 балів.<br>
-                • VIP-рівень дає доступ до розіграшу фонду.<br>
-                • Фонд росте з кожною покупкою.<br>
-                • Рекорд зберігається автоматично.
-            </div>
-            <button class="top-btn" onclick="closeRules()">ЗРОЗУМІЛО</button>
+            <h3 style="color:#ffd700;">ПРАВИЛА</h3>
+            <p style="font-size: 14px; color: #ccc;">Складайте лінії. Кожна лінія +10 балів. Рекорд зберігається автоматично у вашому браузері.</p>
+            <button class="top-btn" onclick="closeRules()">ОК</button>
         </div>
     </div>
 
     <div id="gameOverBox" class="overlay">
         <div class="content">
-            <h2 style="color:#ff4444">КІНЕЦЬ ГРИ</h2>
+            <h2 style="color:#ff4444">КІНЕЦЬ</h2>
             <p>Ваш рахунок: <span id="finalScore">0</span></p>
-            <input type="text" id="playerName" placeholder="Введіть ваш нік" maxlength="12">
-            <button class="top-btn" id="saveBtn" onclick="saveRecord()">ЗБЕРЕГТИ ТА ГРАТИ</button>
+            <button class="top-btn" onclick="location.reload()">ГРАТИ ЗНОВУ</button>
         </div>
     </div>
 
     <script>
-        // ПІДКЛЮЧЕННЯ БАЗИ ДАНИХ
-        const supabaseUrl = 'https://etwbvrbfivyxxkvetsir.supabase.co'; 
-        const supabaseKey = 'sb_publishable_qd7oP1_Db2k5GFGNNDruHQ_I6ww6f9E';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
@@ -118,19 +105,9 @@
                     const fundOnly = Math.max(0, totalBalance - 2.14); 
                     document.getElementById('jackpot').innerText = fundOnly.toFixed(2) + " TON";
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
         updateJackpot();
-
-        async function saveRecord() {
-            const name = document.getElementById('playerName').value.trim() || "Гравець";
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true;
-            btn.innerText = "ЗБЕРІГАЄМО...";
-            const { error } = await supabaseClient.from('leaderboard').insert([{ player_name: name, score: player.score }]);
-            if (!error) location.reload();
-            else { btn.disabled = false; btn.innerText = "ПОМИЛКА"; }
-        }
 
         let isSoundOn = true;
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -140,21 +117,11 @@
             const gain = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
-
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            document.getElementById('soundBtn').innerText = isSoundOn ? '🔊' : '🔈';
-        }
-
-        function showRules() { document.getElementById('rulesBox').style.display = 'flex'; }
-        function closeRules() { document.getElementById('rulesBox').style.display = 'none'; }
 
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
@@ -173,25 +140,18 @@
         const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
         const arena = Array.from({length: 20}, () => new Array(12).fill(0));
         const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-
+        
         let highScore = localStorage.getItem('tetrisBest') || 0;
         document.getElementById('best').innerText = highScore;
 
         function arenaSweep() {
             outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
+                for (let x = 0; x < arena[y].length; ++x) { if (arena[y][x] === 0) continue outer; }
                 const row = arena.splice(y, 1)[0].fill(0);
                 arena.unshift(row);
-                ++y;
-                player.score += 10;
+                ++y; player.score += 10;
                 playTone(600, 'square', 0.2);
             }
-            updateScore();
-        }
-
-        function updateScore() {
             document.getElementById('score').innerText = player.score;
             if (player.score > highScore) {
                 highScore = player.score;
@@ -230,9 +190,7 @@
 
         function merge(arena, player) {
             player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-                });
+                row.forEach((value, x) => { if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value; });
             });
             playTone(200, 'sine', 0.1);
         }
@@ -245,7 +203,6 @@
             if (collide(arena, player)) {
                 document.getElementById('finalScore').innerText = player.score;
                 document.getElementById('gameOverBox').style.display = 'flex';
-                playTone(150, 'sawtooth', 0.5);
                 cancelAnimationFrame(animationId);
             }
         }
@@ -253,10 +210,7 @@
         function playerDrop() {
             player.pos.y++;
             if (collide(arena, player)) {
-                player.pos.y--;
-                merge(arena, player);
-                playerReset();
-                arenaSweep();
+                player.pos.y--; merge(arena, player); playerReset(); arenaSweep();
             }
             dropCounter = 0;
         }
@@ -264,44 +218,31 @@
         function playerMove(dir) {
             player.pos.x += dir;
             if (collide(arena, player)) player.pos.x -= dir;
-            else playTone(400, 'sine', 0.05);
         }
 
         function playerRotate() {
-            const pos = player.pos.x;
-            let offset = 1;
             const matrix = player.matrix;
             for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
+                for (let x = 0; x < y; ++x) { [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]]; }
             }
             matrix.forEach(row => row.reverse());
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) {
-                    player.pos.x = pos;
-                    return;
-                }
-            }
-            playTone(500, 'sine', 0.05);
+            if (collide(arena, player)) matrix.forEach(row => row.reverse());
         }
 
-        let dropCounter = 0;
-        let lastTime = 0;
-        let animationId;
+        let dropCounter = 0; let lastTime = 0; let animationId;
         function update(time = 0) {
-            const deltaTime = time - lastTime;
-            lastTime = time;
+            const deltaTime = time - lastTime; lastTime = time;
             dropCounter += deltaTime;
             if (dropCounter > 1000) playerDrop();
             draw();
             animationId = requestAnimationFrame(update);
         }
 
-        playerReset();
-        update();
+        function toggleSound() { isSoundOn = !isSoundOn; document.getElementById('soundBtn').innerText = isSoundOn ? '🔊' : '🔈'; }
+        function showRules() { document.getElementById('rulesBox').style.display = 'flex'; }
+        function closeRules() { document.getElementById('rulesBox').style.display = 'none'; }
+
+        playerReset(); update();
     </script>
 </body>
 </html>
