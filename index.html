@@ -14,28 +14,17 @@
             text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-align: center; display: block;
         }
 
-        /* Рядок з двома окремими елементами */
-        .info-row { 
-            display: flex; 
-            gap: 8px; 
-            width: 280px; 
-            margin-bottom: 8px; 
-        }
-
-        .info-item { 
-            flex: 1; 
-            background: #1a1a1a; 
-            border: 1px solid #ffd700; 
-            border-radius: 8px; 
-            padding: 6px 4px;
-            text-align: center;
-        }
-
+        .info-row { display: flex; gap: 8px; width: 280px; margin-bottom: 8px; }
+        .info-item { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; padding: 6px 4px; text-align: center; }
         .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-value { font-size: 13px; font-weight: bold; color: #ffd700; }
 
-        .stats-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 80px; text-align: center; }
+        /* Повертаємо панель з кнопками звуку та правил */
+        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .side-btn { background: #333; border: 1px solid #444; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; user-select: none; }
+        
+        .stats-row { display: flex; gap: 8px; }
+        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
         .stat-label { font-size: 8px; color: #aaa; text-transform: uppercase; }
         .stat-value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
@@ -46,6 +35,7 @@
 
         .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
         .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
+        .rules-list { text-align: left; font-size: 13px; line-height: 1.5; color: #ccc; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -65,9 +55,13 @@
         </div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-box"><div class="stat-label">Очки</div><div id="score" class="stat-value">0</div></div>
-        <div class="stat-box"><div class="stat-label">Рівень</div><div id="level" class="stat-value">1</div></div>
+    <div class="score-panel">
+        <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
+        <div class="stats-row">
+            <div class="stat-box"><div class="stat-label">Очки</div><div id="score" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">Рівень</div><div id="level" class="stat-value">1</div></div>
+        </div>
+        <div class="side-btn" onclick="showRules()">?</div>
     </div>
 
     <canvas id="tetris" width="240" height="400"></canvas>
@@ -77,6 +71,19 @@
         <div class="btn" onpointerdown="playerRotate()">🔄</div>
         <div class="btn" onpointerdown="playerDrop()">⬇️</div>
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
+    </div>
+
+    <div id="rulesBox" class="overlay">
+        <div class="content">
+            <h3 style="color:#ffd700; margin-top:0;">ЯК ГРАТИ?</h3>
+            <div class="rules-list">
+                • Збирайте лінії для отримання очок.<br>
+                • На 200 очках — перехід до Тур 2.<br>
+                • Після розблокування виплати доступні на 400 очках.<br>
+                • Рівень складності зростає кожні 200 очок.
+            </div>
+            <button class="top-link-btn" style="border:none; cursor:pointer;" onclick="closeRules()">ЗРОЗУМІЛО</button>
+        </div>
     </div>
 
     <div id="unlockBox" class="overlay">
@@ -93,6 +100,7 @@
             buttonRootId: 'ton-connect-button'
         });
 
+        // Логіка балансу
         async function updateBalance() {
             const wallet = tonConnectUI.account;
             if (wallet) {
@@ -107,6 +115,15 @@
             }
         }
         setInterval(updateBalance, 5000);
+
+        // Звук та правила
+        let isSoundOn = true;
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            document.getElementById('soundBtn').innerText = isSoundOn ? '🔊' : '🔈';
+        }
+        function showRules() { document.getElementById('rulesBox').style.display = 'flex'; isPaused = true; }
+        function closeRules() { document.getElementById('rulesBox').style.display = 'none'; isPaused = false; requestAnimationFrame(update); }
 
         let isVip = false;
         let isPaused = false;
@@ -140,128 +157,4 @@
         const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
 
         function updateScore() {
-            document.getElementById('score').innerText = player.score;
-            const level = Math.floor(player.score / 200) + 1;
-            document.getElementById('level').innerText = level;
-            dropInterval = Math.max(100, 1000 - (level - 1) * 250);
-
-            if (player.score >= 200 && !isVip) {
-                isPaused = true;
-                document.getElementById('unlockBox').style.display = 'flex';
-            }
-        }
-
-        function draw() {
-            context.fillStyle = '#000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            drawMatrix(arena, {x: 0, y: 0});
-            drawMatrix(player.matrix, player.pos);
-        }
-
-        function drawMatrix(matrix, offset) {
-            matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        context.fillStyle = colors[value];
-                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
-                    }
-                });
-            });
-        }
-
-        function collide(arena, player) {
-            const [m, o] = [player.matrix, player.pos];
-            for (let y = 0; y < m.length; ++y) {
-                for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
-                }
-            }
-            return false;
-        }
-
-        function merge(arena, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-                });
-            });
-        }
-
-        function playerReset() {
-            const pieces = 'ILJOTSZ';
-            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
-            player.pos.y = 0;
-            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
-            if (collide(arena, player)) {
-                arena.forEach(row => row.fill(0));
-                player.score = 0;
-                updateScore();
-            }
-        }
-
-        function playerDrop() {
-            player.pos.y++;
-            if (collide(arena, player)) {
-                player.pos.y--;
-                merge(arena, player);
-                playerReset();
-                arenaSweep();
-            }
-            dropCounter = 0;
-        }
-
-        function arenaSweep() {
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
-                ++y;
-                player.score += 10;
-            }
-            updateScore();
-        }
-
-        function playerMove(dir) {
-            if (isPaused) return;
-            player.pos.x += dir;
-            if (collide(arena, player)) player.pos.x -= dir;
-        }
-
-        function playerRotate() {
-            if (isPaused) return;
-            const pos = player.pos.x;
-            let offset = 1;
-            const matrix = player.matrix;
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-                }
-            }
-            matrix.forEach(row => row.reverse());
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) {
-                    player.pos.x = pos;
-                    return;
-                }
-            }
-        }
-
-        function update(time = 0) {
-            if (isPaused) return;
-            const deltaTime = time - lastTime;
-            lastTime = time;
-            dropCounter += deltaTime;
-            if (dropCounter > dropInterval) playerDrop();
-            draw();
-            requestAnimationFrame(update);
-        }
-
-        playerReset();
-        update();
-    </script>
-</body>
-</html>
+            document.getElementById('score').innerText = player.
