@@ -7,8 +7,6 @@
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-        
-        /* ГАМАНЕЦЬ ЗВЕРХУ */
         #ton-connect-button { margin-bottom: 8px; min-height: 44px; width: 100%; display: flex; justify-content: center; z-index: 100; }
         
         .top-link-btn { width: 280px; background: #ffd700; color: #000; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-align: center; display: block; border: none; }
@@ -18,7 +16,6 @@
         .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-value { font-size: 14px; font-weight: bold; color: #ffd700; }
 
-        /* КНОПКА ВИВОДУ */
         #winButton { display: none; background: #28a745; color: white; width: 280px; padding: 15px; border-radius: 8px; border: none; font-weight: bold; margin-bottom: 10px; cursor: pointer; animation: pulse 1.5s infinite; z-index: 101; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
@@ -29,7 +26,6 @@
         .stat-label { font-size: 8px; color: #aaa; text-transform: uppercase; }
         .stat-value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
-        /* ПАРАМЕТРИ ПОЛЯ (ФІГУРИ МАЮТЬ БУТИ ТУТ) */
         canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; display: block; }
         
         .controls { display: flex; gap: 8px; margin-top: 10px; }
@@ -43,7 +39,7 @@
 
     <div id="ton-connect-button"></div>
     
-    <a href="#" class="top-link-btn">🎮 ПОГРАТИ В ІНШУ ГРУ</a>
+    <a href="defender.html" class="top-link-btn">🛡️ UA DEFENDER — ЗАХИСТИ КОРДОН!</a>
 
     <div class="info-row">
         <div class="info-item">
@@ -85,20 +81,17 @@
     </div>
 
     <script>
-        // ІНІЦІАЛІЗАЦІЯ TON CONNECT
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://providnykzpoun-bit.github.io/Tetris/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        // ПЕРЕХІД В ТЕЛЕГРАМ З ДАНИМИ
         function sendToTelegram() {
             const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
             const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 5000 UA%0A👛 Гаманець: ${wallet}`;
             window.open(`https://t.me/uatokenkrypta?text=${text}`, '_blank');
         }
 
-        // ЛОГІКА ТЕТРІСУ (МАЛЮВАННЯ ФІГУР)
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
         context.scale(20, 20);
@@ -216,46 +209,3 @@
             const pos = player.pos.x;
             let offset = 1;
             const matrix = player.matrix;
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-            }
-            matrix.forEach(row => row.reverse());
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) { player.pos.x = pos; return; }
-            }
-        }
-
-        function update(time = 0) {
-            if (!isPaused) {
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                dropCounter += deltaTime;
-                if (dropCounter > dropInterval) playerDrop();
-                draw();
-            }
-            requestAnimationFrame(update);
-        }
-
-        // ОНОВЛЕННЯ БАЛАНСУ
-        async function updateBalance() {
-            if (tonConnectUI.account) {
-                try {
-                    const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${tonConnectUI.account.address}`);
-                    const data = await res.json();
-                    if (data.ok) document.getElementById('balance-ua').innerText = (data.result.balance / 1e9).toFixed(2) + " TON";
-                } catch (e) {}
-            }
-        }
-        setInterval(updateBalance, 5000);
-
-        function toggleSound() { document.getElementById('soundBtn').innerText = document.getElementById('soundBtn').innerText === '🔊' ? '🔈' : '🔊'; }
-        function showRules() { alert('Мета: 200 очок для VIP, 400 очок для виплати 5000 UA!'); }
-        function payAndContinue() { isVip = true; isPaused = false; document.getElementById('unlockBox').style.display = 'none'; }
-
-        playerReset();
-        update();
-    </script>
-</body>
-</html>
