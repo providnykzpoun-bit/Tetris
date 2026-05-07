@@ -38,7 +38,6 @@
 <body>
 
     <div id="ton-connect-button"></div>
-    
     <a href="defender.html" class="top-link-btn">🛡️ UA DEFENDER — ЗАХИСТИ КОРДОН!</a>
 
     <div class="info-row">
@@ -209,3 +208,45 @@
             const pos = player.pos.x;
             let offset = 1;
             const matrix = player.matrix;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+            matrix.forEach(row => row.reverse());
+            while (collide(arena, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > matrix[0].length) { player.pos.x = pos; return; }
+            }
+        }
+
+        function update(time = 0) {
+            if (!isPaused) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) playerDrop();
+                draw();
+            }
+            requestAnimationFrame(update);
+        }
+
+        async function updateBalance() {
+            if (tonConnectUI.account) {
+                try {
+                    const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${tonConnectUI.account.address}`);
+                    const data = await res.json();
+                    if (data.ok) document.getElementById('balance-ua').innerText = (data.result.balance / 1e9).toFixed(2) + " TON";
+                } catch (e) {}
+            }
+        }
+        setInterval(updateBalance, 5000);
+
+        function toggleSound() { document.getElementById('soundBtn').innerText = document.getElementById('soundBtn').innerText === '🔊' ? '🔈' : '🔊'; }
+        function showRules() { alert('200 очок - розблокування. 400 очок - виплата!'); }
+        function payAndContinue() { isVip = true; isPaused = false; document.getElementById('unlockBox').style.display = 'none'; }
+
+        playerReset();
+        update();
+    </script>
+</body>
+</html>
