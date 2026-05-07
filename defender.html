@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UA DEFENDER 🛡️</title>
+    <style>
+        body { background: #0a0a0a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        canvas { background: #000; border: 2px solid #ffd700; border-radius: 10px; margin-top: 10px; width: 90vw; height: 60vh; }
+        .ui { text-align: center; margin-top: 10px; }
+        .score { font-size: 24px; color: #ffd700; font-weight: bold; }
+        .controls { display: flex; gap: 20px; margin-top: 20px; }
+        .btn { background: #333; border: 2px solid #ffd700; color: white; width: 80px; height: 80px; border-radius: 50%; font-size: 30px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .back-btn { margin-top: 15px; padding: 10px 20px; background: #ffd700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="ui">
+        <div class="score">ЗБИТО: <span id="val">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controls">
+        <div class="btn" id="leftBtn">⬅️</div>
+        <div class="btn" id="rightBtn">➡️</div>
+    </div>
+
+    <a href="index.html" class="back-btn">🔙 ПОВЕРНУТИСЬ ДО ТЕТРІСУ</a>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('val');
+
+        canvas.width = 400;
+        canvas.height = 600;
+
+        let score = 0;
+        let player = { x: 175, y: 550, w: 50, h: 20, speed: 7 };
+        let projectiles = [];
+        let enemies = [];
+        let moveLeft = false;
+        let moveRight = false;
+
+        function spawnEnemy() {
+            enemies.push({
+                x: Math.random() * (canvas.width - 30),
+                y: -30,
+                w: 30,
+                h: 30,
+                speed: 2 + Math.random() * 2
+            });
+        }
+
+        function shoot() {
+            projectiles.push({ x: player.x + player.w / 2 - 2, y: player.y, w: 4, h: 10, speed: 8 });
+        }
+
+        setInterval(spawnEnemy, 1000);
+        setInterval(shoot, 400); // Автоматична стрільба
+
+        function update() {
+            if (moveLeft && player.x > 0) player.x -= player.speed;
+            if (moveRight && player.x < canvas.width - player.w) player.x += player.speed;
+
+            projectiles.forEach((p, pi) => {
+                p.y -= p.speed;
+                if (p.y < 0) projectiles.splice(pi, 1);
+            });
+
+            enemies.forEach((e, ei) => {
+                e.y += e.speed;
+                if (e.y > canvas.height) {
+                    enemies.splice(ei, 1);
+                    if (score > 0) score -= 1; // Штраф за пропущений
+                }
+
+                projectiles.forEach((p, pi) => {
+                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                        enemies.splice(ei, 1);
+                        projectiles.splice(pi, 1);
+                        score += 1;
+                        scoreVal.innerText = score;
+                    }
+                });
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Гравець (Захисник)
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+
+            // Снаряди
+            ctx.fillStyle = '#00d4ff';
+            projectiles.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+
+            // Вороги
+            ctx.fillStyle = '#ff4444';
+            enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // Керування
+        const lBtn = document.getElementById('leftBtn');
+        const rBtn = document.getElementById('rightBtn');
+
+        lBtn.onpointerdown = () => moveLeft = true;
+        lBtn.onpointerup = () => moveLeft = false;
+        rBtn.onpointerdown = () => moveRight = true;
+        rBtn.onpointerup = () => moveRight = false;
+
+        loop();
+    </script>
+</body>
+</html>
