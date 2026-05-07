@@ -9,41 +9,45 @@
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
         
-        .top-info-row { display: flex; gap: 5px; width: 280px; margin-bottom: 5px; align-items: stretch; }
-        .mini-jackpot { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; }
-        .jackpot-label { font-size: 8px; color: #ffd700; text-transform: uppercase; }
-        .jackpot-value { font-size: 14px; color: #ffd700; font-weight: bold; }
-
-        /* Стиль для кнопки-посилання */
-        .top-link-btn { 
+        /* ПАНЕЛЬ ВИПЛАТ ТА БАЛАНСУ */
+        .info-container { 
+            display: flex; 
             width: 280px; 
-            background: #ffd700; 
-            color: #000; 
-            padding: 10px; 
+            background: #1a1a1a; 
+            border: 1px solid #ffd700; 
             border-radius: 8px; 
-            text-decoration: none; 
-            font-weight: bold; 
-            font-size: 13px; 
-            margin-bottom: 10px; 
-            text-align: center;
-            display: block;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        .info-box { 
+            flex: 1; 
+            padding: 5px; 
+            text-align: center; 
+            border-right: 1px solid #333;
+        }
+        .info-box:last-child { border-right: none; }
+        .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; }
+        .info-value { font-size: 13px; font-weight: bold; color: #ffd700; }
+
+        .top-link-btn { 
+            width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; 
+            text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-align: center; display: block;
         }
 
-        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .stats-row { display: flex; gap: 5px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 60px; text-align: center; }
-        .label { font-size: 8px; color: #aaa; text-transform: uppercase; }
-        .value { font-size: 14px; font-weight: bold; color: #00d4ff; }
+        .stats-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 80px; text-align: center; }
+        .stat-label { font-size: 8px; color: #aaa; text-transform: uppercase; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
         canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
         
         .controls { display: flex; gap: 8px; margin-top: 10px; width: 100%; justify-content: center; }
-        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
+        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; }
 
         .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
         .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
         
-        #winButton { display: none; background: #28a745; color: white; width: 280px; padding: 12px; border-radius: 8px; border: none; font-weight: bold; margin-bottom: 5px; animation: pulse 1.5s infinite; }
+        #winButton { display: none; background: #28a745; color: white; width: 280px; padding: 12px; border-radius: 8px; border: none; font-weight: bold; margin-bottom: 8px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
@@ -51,22 +55,24 @@
 
     <div id="ton-connect-button"></div>
     
-    <div class="top-info-row">
-        <div class="mini-jackpot" style="flex:2">
-            <div class="jackpot-label">Доступно до виплати</div>
-            <div class="jackpot-value">5000 UA</div>
+    <a href="URL_ВАШОЇ_ГРИ" class="top-link-btn">🎮 ПОГРАТИ В ІНШУ ГРУ</a>
+
+    <div class="info-container">
+        <div class="info-box">
+            <div class="stat-label" style="color:#ffd700">Доступно до виплати</div>
+            <div class="info-value">5000 UA</div>
+        </div>
+        <div class="info-box">
+            <div class="stat-label" style="color:#ffd700">Отримано</div>
+            <div id="balance-ua" class="info-value">0.00 TON</div>
         </div>
     </div>
 
-    <a href="URL_ВАШОЇ_ГРИ" class="top-link-btn">🎮 ПОГРАТИ В ІНШУ ГРУ</a>
+    <button id="winButton" onclick="alert('Заявка прийнята!')">💰 ВИВЕСТИ 5000 UA</button>
 
-    <button id="winButton" onclick="alert('Заявка на виплату 5000 UA прийнята!')">💰 ВИВЕСТИ 5000 UA</button>
-
-    <div class="score-panel">
-        <div class="stats-row">
-            <div class="stat-box"><div class="label">Очки</div><div id="score" class="value">0</div></div>
-            <div class="stat-box"><div class="label">Рівень</div><div id="level" class="value">1</div></div>
-        </div>
+    <div class="stats-row">
+        <div class="stat-box"><div class="stat-label">Очки</div><div id="score" class="stat-value">0</div></div>
+        <div class="stat-box"><div class="stat-label">Рівень</div><div id="level" class="stat-value">1</div></div>
     </div>
 
     <canvas id="tetris" width="240" height="400"></canvas>
@@ -81,8 +87,8 @@
     <div id="unlockBox" class="overlay">
         <div class="content">
             <h2 style="color:#ffd700">ТУР 1 ПРОЙДЕНО!</h2>
-            <p>Ви набрали 200 очок. Розблокуйте наступний тур, щоб отримати можливість вивести <b>5000 UA</b> на 400 очках!</p>
-            <button class="top-link-btn" style="background:#0088cc; color:white; border:none; cursor:pointer;" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
+            <p>Розблокуйте наступний тур, щоб вивести 5000 UA на 400 очках!</p>
+            <button class="top-link-btn" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
         </div>
     </div>
 
@@ -92,6 +98,22 @@
             buttonRootId: 'ton-connect-button'
         });
 
+        // Оновлення балансу для поля "Отримано"
+        async function updateBalance() {
+            const wallet = tonConnectUI.account;
+            if (wallet) {
+                try {
+                    const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${wallet.address}`);
+                    const data = await res.json();
+                    if (data.ok) {
+                        const bal = (data.result.balance / 1e9).toFixed(2);
+                        document.getElementById('balance-ua').innerText = bal + " TON";
+                    }
+                } catch (e) { console.error(e); }
+            }
+        }
+        setInterval(updateBalance, 5000);
+
         let isVip = false;
         let isPaused = false;
         let dropInterval = 1000;
@@ -99,7 +121,6 @@
         let lastTime = 0;
 
         async function payAndContinue() {
-            // Тут буде ваша логіка оплати TON
             isVip = true;
             isPaused = false;
             document.getElementById('unlockBox').style.display = 'none';
@@ -128,15 +149,12 @@
             document.getElementById('score').innerText = player.score;
             const level = Math.floor(player.score / 200) + 1;
             document.getElementById('level').innerText = level;
-            
-            // Збільшуємо швидкість (зменшуємо інтервал)
             dropInterval = Math.max(100, 1000 - (level - 1) * 250);
 
             if (player.score >= 200 && !isVip) {
                 isPaused = true;
                 document.getElementById('unlockBox').style.display = 'flex';
             }
-
             if (player.score >= 400 && isVip) {
                 document.getElementById('winButton').style.display = 'block';
             }
