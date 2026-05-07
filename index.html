@@ -7,42 +7,42 @@
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-        #ton-connect-button { margin-bottom: 5px; min-height: 44px; display: flex; justify-content: center; width: 100%; }
         
-        .top-link-btn { 
-            width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; 
-            text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-align: center; display: block;
-        }
+        /* ГАМАНЕЦЬ */
+        #ton-connect-button { margin-bottom: 8px; min-height: 44px; width: 100%; display: flex; justify-content: center; }
+        
+        .top-link-btn { width: 280px; background: #ffd700; color: #000; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 8px; text-align: center; display: block; border: none; }
 
+        /* ВІКНА ВИПЛАТ */
         .info-row { display: flex; gap: 8px; width: 280px; margin-bottom: 8px; }
-        .info-item { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; padding: 6px 4px; text-align: center; }
+        .info-item { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; padding: 6px 2px; text-align: center; }
         .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .info-value { font-size: 13px; font-weight: bold; color: #ffd700; }
+        .info-value { font-size: 14px; font-weight: bold; color: #ffd700; }
 
-        /* Повертаємо панель з кнопками звуку та правил */
-        .score-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .side-btn { background: #333; border: 1px solid #444; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; user-select: none; }
-        
-        .stats-row { display: flex; gap: 8px; }
-        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 70px; text-align: center; }
+        /* ПАНЕЛЬ КЕРУВАННЯ ТА СТАТИСТИКИ */
+        .score-panel { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .side-btn { background: #333; border: 1px solid #444; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; user-select: none; }
+        .stats-row { display: flex; gap: 5px; }
+        .stat-box { background: #222; padding: 5px; border-radius: 6px; border: 1px solid #333; min-width: 65px; text-align: center; }
         .stat-label { font-size: 8px; color: #aaa; text-transform: uppercase; }
         .stat-value { font-size: 16px; font-weight: bold; color: #00d4ff; }
 
+        /* ІГРОВЕ ПОЛЕ */
         canvas { border: 2px solid #333; background: #000; width: 220px; height: 380px; border-radius: 8px; }
         
-        .controls { display: flex; gap: 8px; margin-top: 10px; width: 100%; justify-content: center; }
-        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        /* КНОПКИ ГРИ */
+        .controls { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
 
-        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; }
-        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; width: 80%; text-align: center; border: 2px solid #ffd700; }
-        .rules-list { text-align: left; font-size: 13px; line-height: 1.5; color: #ccc; margin: 15px 0; }
+        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; text-align: center; border: 2px solid #ffd700; max-width: 280px; }
     </style>
 </head>
 <body>
 
     <div id="ton-connect-button"></div>
     
-    <a href="URL_ВАШОЇ_ГРИ" class="top-link-btn">🎮 ПОГРАТИ В ІНШУ ГРУ</a>
+    <a href="#" class="top-link-btn">🎮 ПОГРАТИ В ІНШУ ГРУ</a>
 
     <div class="info-row">
         <div class="info-item">
@@ -73,24 +73,11 @@
         <div class="btn" onpointerdown="playerMove(1)">➡️</div>
     </div>
 
-    <div id="rulesBox" class="overlay">
-        <div class="content">
-            <h3 style="color:#ffd700; margin-top:0;">ЯК ГРАТИ?</h3>
-            <div class="rules-list">
-                • Збирайте лінії для отримання очок.<br>
-                • На 200 очках — перехід до Тур 2.<br>
-                • Після розблокування виплати доступні на 400 очках.<br>
-                • Рівень складності зростає кожні 200 очок.
-            </div>
-            <button class="top-link-btn" style="border:none; cursor:pointer;" onclick="closeRules()">ЗРОЗУМІЛО</button>
-        </div>
-    </div>
-
     <div id="unlockBox" class="overlay">
         <div class="content">
             <h2 style="color:#ffd700">ТУР 1 ПРОЙДЕНО!</h2>
-            <p>Розблокуйте наступний тур, щоб вивести 5000 UA на 400 очках!</p>
-            <button class="top-link-btn" style="border:none; cursor:pointer;" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
+            <p>Набрано 200 очок. Розблокуйте наступний етап для виплати 5000 UA!</p>
+            <button class="top-link-btn" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
         </div>
     </div>
 
@@ -100,47 +87,15 @@
             buttonRootId: 'ton-connect-button'
         });
 
-        // Логіка балансу
-        async function updateBalance() {
-            const wallet = tonConnectUI.account;
-            if (wallet) {
-                try {
-                    const res = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${wallet.address}`);
-                    const data = await res.json();
-                    if (data.ok) {
-                        const bal = (data.result.balance / 1e9).toFixed(2);
-                        document.getElementById('balance-ua').innerText = bal + " TON";
-                    }
-                } catch (e) { console.error(e); }
-            }
-        }
-        setInterval(updateBalance, 5000);
-
-        // Звук та правила
-        let isSoundOn = true;
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            document.getElementById('soundBtn').innerText = isSoundOn ? '🔊' : '🔈';
-        }
-        function showRules() { document.getElementById('rulesBox').style.display = 'flex'; isPaused = true; }
-        function closeRules() { document.getElementById('rulesBox').style.display = 'none'; isPaused = false; requestAnimationFrame(update); }
-
-        let isVip = false;
-        let isPaused = false;
-        let dropInterval = 1000;
-        let dropCounter = 0;
-        let lastTime = 0;
-
-        function payAndContinue() {
-            isVip = true;
-            isPaused = false;
-            document.getElementById('unlockBox').style.display = 'none';
-            requestAnimationFrame(update); 
-        }
-
         const canvas = document.getElementById('tetris');
         const context = canvas.getContext('2d');
         context.scale(20, 20);
+
+        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
+        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+
+        let isVip = false, isPaused = false, dropInterval = 1000, dropCounter = 0, lastTime = 0;
 
         function createPiece(type) {
             if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -152,9 +107,136 @@
             if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
         }
 
-        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
-        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos);
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
+        function arenaSweep() {
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) {
+                    if (arena[y][x] === 0) continue outer;
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                player.score += 10;
+            }
+            updateScore();
+        }
 
         function updateScore() {
-            document.getElementById('score').innerText = player.
+            document.getElementById('score').innerText = player.score;
+            const level = Math.floor(player.score / 200) + 1;
+            document.getElementById('level').innerText = level;
+            dropInterval = Math.max(100, 1000 - (level - 1) * 200);
+
+            if (player.score >= 200 && !isVip) {
+                isPaused = true;
+                document.getElementById('unlockBox').style.display = 'flex';
+            }
+        }
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+            player.pos.y = 0;
+            player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+            if (collide(arena, player)) {
+                arena.forEach(row => row.fill(0));
+                player.score = 0;
+                updateScore();
+            }
+        }
+
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(dir) {
+            if (isPaused) return;
+            player.pos.x += dir;
+            if (collide(arena, player)) player.pos.x -= dir;
+        }
+
+        function playerRotate() {
+            if (isPaused) return;
+            const pos = player.pos.x;
+            let offset = 1;
+            const matrix = player.matrix;
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+            }
+            matrix.forEach(row => row.reverse());
+            while (collide(arena, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > matrix[0].length) { player.pos.x = pos; return; }
+            }
+        }
+
+        function update(time = 0) {
+            if (!isPaused) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) playerDrop();
+                draw();
+            }
+            requestAnimationFrame(update);
+        }
+
+        function toggleSound() {
+            const btn = document.getElementById('soundBtn');
+            btn.innerText = btn.innerText === '🔊' ? '🔈' : '🔊';
+        }
+
+        function showRules() { alert('Збирайте лінії! На 200 очках розблокуйте VIP, на 400 - виплата!'); }
+
+        function payAndContinue() {
+            isVip = true; isPaused = false;
+            document.getElementById('unlockBox').style.display = 'none';
+        }
+
+        playerReset();
+        update();
+    </script>
+</body>
+</html>
