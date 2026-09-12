@@ -47,11 +47,11 @@
     <div class="info-row">
         <div class="info-item" style="flex: 2;">
             <span class="info-label">Доступно до виплати</span>
-            <div class="info-value">5000 UA</div>
+            <div id="balanceValue" class="info-value">2000 UA</div>
         </div>
     </div>
 
-    <a id="winButton" href="#" target="_blank">💰 ВИВЕСТИ 5000 UA</a>
+    <button id="winButton" onclick="withdrawUA()">💰 ВИВЕСТИ 2000 UA</button>
 
     <div class="score-panel">
         <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
@@ -78,7 +78,7 @@
     <div id="unlockBox" class="overlay">
         <div class="content">
             <h2 style="color:#ffd700">ПЕРШИЙ РІВЕНЬ ПРОЙДЕНО!</h2>
-            <p>Набрано 20 очок. Розблокуйте фінальний етап для виплати 5000 UA!</p>
+            <p>Набрано 20 очок. Розблокуйте фінальний етап для виплати 2000 UA!</p>
             <button class="top-link-btn" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
         </div>
     </div>
@@ -108,11 +108,15 @@
             } catch(e) {}
         }
 
-        function updateTelegramLink() {
+        function withdrawUA() {
             const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
-            const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 5000 UA%0A👛 Гаманець: ${wallet}`;
-            const btn = document.getElementById('winButton');
-            btn.href = `https://t.me/tokenpist_bot?text=${text}`;
+            const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 2000 UA%0A👛 Гаманець: ${wallet}`;
+            
+            window.open(`https://t.me/tokenpist_bot?text=${text}`, '_blank');
+
+            // Обнуляємо баланс і ховаємо кнопку після натискання
+            document.getElementById('balanceValue').innerText = '0 UA';
+            document.getElementById('winButton').style.display = 'none';
         }
 
         const canvas = document.getElementById('tetris');
@@ -224,8 +228,7 @@
                 document.getElementById('unlockBox').style.display = 'flex';
                 playTone(800, 'triangle', 0.4);
             }
-            if (player.score >= 40 && isVip) {
-                updateTelegramLink();
+            if (player.score >= 40 && isVip && document.getElementById('balanceValue').innerText !== '0 UA') {
                 document.getElementById('winButton').style.display = 'block';
             }
         }
@@ -314,7 +317,7 @@
         }
 
         function showRules() { 
-            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 5000 UA!'); 
+            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 2000 UA!'); 
         }
 
         async function payAndContinue() {
