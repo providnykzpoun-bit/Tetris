@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UA TETRIS 🗿</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         #ton-connect-button { margin-bottom: 6px; min-height: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; }
@@ -111,7 +112,13 @@
         function sendToTelegram() {
             const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
             const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 5000 UA%0A👛 Гаманець: ${wallet}`;
-            window.open(`https://t.me/uatokenkrypta?text=${text}`, '_blank');
+            const url = `https://t.me/uatokenkrypta?text=${text}`;
+            
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+                window.Telegram.WebApp.openTelegramLink(url);
+            } else {
+                window.open(url, '_blank');
+            }
         }
 
         const canvas = document.getElementById('tetris');
@@ -218,14 +225,12 @@
             const lvl = Math.floor(player.score / 20) + 1;
             document.getElementById('level').innerText = lvl;
 
-            // Змінено поріг розблокування на 20 очок
             if (player.score >= 20 && !isVip) {
                 isPaused = true;
                 document.getElementById('unlockBox').style.display = 'flex';
                 playTone(800, 'triangle', 0.4);
             }
-            // Змінено фінальну виплату на 40 очок
-            if (player.score >= 40 && isVip) {
+            if (player.score >= 100 && isVip) {
                 document.getElementById('winButton').style.display = 'block';
             }
         }
@@ -314,7 +319,7 @@
         }
 
         function showRules() { 
-            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 5000 UA!'); 
+            alert('Збирайте очки! На 20 очках — розблокування, на 100 — виплата 5000 UA!'); 
         }
 
         async function payAndContinue() {
