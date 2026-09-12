@@ -29,7 +29,6 @@
         .next-box { background: #222; border: 1px solid #333; border-radius: 6px; width: 45px; height: 36px; display: flex; align-items: center; justify-content: center; position: relative; }
         #nextCanvas { width: 32px; height: 32px; display: block; }
 
-        .game-container { display: flex; gap: 8px; align-items: center; }
         canvas#tetris { border: 2px solid #333; background: #000; width: 200px; height: 340px; border-radius: 8px; display: block; }
         
         .controls { display: flex; gap: 6px; margin-top: 8px; }
@@ -90,7 +89,6 @@
             buttonRootId: 'ton-connect-button'
         });
 
-        // Web Audio API для звуків
         let soundEnabled = true;
         let audioCtx = null;
         function playTone(freq, type, duration) {
@@ -124,7 +122,6 @@
         const nextCtx = nextCanvas.getContext('2d');
         nextCtx.scale(8, 8);
 
-        // Палітра: 1-7 класичні, 8 - спец-фігура UA (жовто-блакитна)
         const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#0055FF'];
         const arena = Array.from({length: 20}, () => new Array(12).fill(0));
         
@@ -141,13 +138,12 @@
             if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
             if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
             if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
-            if (type === 'UA') return [[8,8],[8,8]]; // Спец-фігура UA
+            if (type === 'UA') return [[8,8],[8,8]];
         }
 
         function getRandomPiece() {
             const pieces = 'ILJOTSZ';
             let chosen = pieces[Math.floor(Math.random() * pieces.length)];
-            // Шанс 15% на появу спец-фігури UA
             if (Math.random() < 0.15) chosen = 'UA';
             return createPiece(chosen);
         }
@@ -208,10 +204,10 @@
                 const row = arena.splice(y, 1)[0].fill(0);
                 arena.unshift(row);
                 rowCount++;
-                y++; // Перевірити цей же рядок знову
+                y++;
             }
             if (rowCount > 0) {
-                player.score += rowCount * 10 * (rowCount === 4 ? 2 : 1); // Бонус за тетріс
+                player.score += rowCount * 10 * (rowCount === 4 ? 2 : 1);
                 playTone(600, 'sine', 0.2);
                 updateScore();
             }
@@ -320,10 +316,30 @@
             alert('Збирайте очки! Спец-фігури UA дають бонус. На 200 очках — розблокування, на 400 — виплата!'); 
         }
 
-        function payAndContinue() { 
-            isVip = true; 
-            isPaused = false; 
-            document.getElementById('unlockBox').style.display = 'none'; 
+        async function payAndContinue() {
+            if (!tonConnectUI.connected) {
+                alert('Будь ласка, підключіть гаманець зверху!');
+                return;
+            }
+
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 300,
+                messages: [
+                    {
+                        address: "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw",
+                        amount: "10000000" // 0.01 TON
+                    }
+                ]
+            };
+
+            try {
+                await tonConnectUI.sendTransaction(transaction);
+                isVip = true; 
+                isPaused = false; 
+                document.getElementById('unlockBox').style.display = 'none';
+            } catch (e) {
+                console.log("Транзакція скасована", e);
+            }
         }
 
         playerReset();
