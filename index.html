@@ -9,7 +9,7 @@
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         #ton-connect-button { margin-bottom: 6px; min-height: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; }
         
-        .top-link-btn { width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-align: center; display: block; border: none; }
+        .top-link-btn { width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-align: center; display: block; border: none; cursor: pointer; }
 
         .info-row { display: flex; gap: 8px; width: 280px; margin-bottom: 6px; }
         .info-item { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; padding: 4px 2px; text-align: center; }
@@ -77,8 +77,8 @@
 
     <div id="unlockBox" class="overlay">
         <div class="content">
-            <h2 style="color:#ffd700">ТУР 1 ПРОЙДЕНО!</h2>
-            <p>Набрано 200 очок. Розблокуйте наступний етап для виплати 5000 UA!</p>
+            <h2 style="color:#ffd700">ПЕРШИЙ РІВЕНЬ ПРОЙДЕНО!</h2>
+            <p>Набрано 20 очок. Розблокуйте фінальний етап для виплати 5000 UA!</p>
             <button class="top-link-btn" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
         </div>
     </div>
@@ -128,7 +128,7 @@
         const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
         let nextPieceMatrix = null;
 
-        let isVip = false, isPaused = false, dropInterval = 1000, dropCounter = 0, lastTime = 0;
+        let isVip = false, isPaused = false, dropInterval = 800, dropCounter = 0, lastTime = 0;
 
         function createPiece(type) {
             if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
@@ -207,7 +207,7 @@
                 y++;
             }
             if (rowCount > 0) {
-                player.score += rowCount * 10 * (rowCount === 4 ? 2 : 1);
+                player.score += rowCount * 10;
                 playTone(600, 'sine', 0.2);
                 updateScore();
             }
@@ -215,16 +215,17 @@
 
         function updateScore() {
             document.getElementById('score').innerText = player.score;
-            const lvl = Math.floor(player.score / 200) + 1;
+            const lvl = Math.floor(player.score / 20) + 1;
             document.getElementById('level').innerText = lvl;
-            dropInterval = Math.max(100, 1000 - (lvl - 1) * 200);
 
-            if (player.score >= 200 && !isVip) {
+            // Змінено поріг розблокування на 20 очок
+            if (player.score >= 20 && !isVip) {
                 isPaused = true;
                 document.getElementById('unlockBox').style.display = 'flex';
                 playTone(800, 'triangle', 0.4);
             }
-            if (player.score >= 400 && isVip) {
+            // Змінено фінальну виплату на 40 очок
+            if (player.score >= 40 && isVip) {
                 document.getElementById('winButton').style.display = 'block';
             }
         }
@@ -313,7 +314,7 @@
         }
 
         function showRules() { 
-            alert('Збирайте очки! Спец-фігури UA дають бонус. На 200 очках — розблокування, на 400 — виплата!'); 
+            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 5000 UA!'); 
         }
 
         async function payAndContinue() {
