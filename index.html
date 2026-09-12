@@ -31,7 +31,7 @@
         .controls { display: flex; gap: 8px; margin-top: 10px; }
         .btn { background: #333; border: 1px solid #444; color: white; width: 55px; height: 55px; border-radius: 12px; font-size: 20px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
 
-        .overlay { display:none; background: rgba(0,0,0,0.9); position: fixed; top:0; left:0; width:100%; height:100%; z-index:1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .overlay { display: none; background: rgba(0,0,0,0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .content { background: #1a1a1a; padding: 20px; border-radius: 20px; text-align: center; border: 2px solid #ffd700; max-width: 280px; }
     </style>
 </head>
@@ -43,7 +43,7 @@
     <div class="info-row">
         <div class="info-item">
             <span class="info-label">Доступно до виплати</span>
-            <div class="info-value">5000 UA</div>
+            <div id="ua-balance" class="info-value">0 UA</div>
         </div>
         <div class="info-item">
             <span class="info-label">Отримано</span>
@@ -85,9 +85,17 @@
             buttonRootId: 'ton-connect-button'
         });
 
+        // Ініціалізація або завантаження балансу UA з localStorage
+        let userUaBalance = parseInt(localStorage.getItem('user_ua_balance')) || 0;
+        function updateUaDisplay() {
+            document.getElementById('ua-balance').innerText = userUaBalance + " UA";
+            localStorage.setItem('user_ua_balance', userUaBalance);
+        }
+        updateUaDisplay();
+
         function sendToTelegram() {
             const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
-            const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 5000 UA%0A👛 Гаманець: ${wallet}`;
+            const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: ${userUaBalance} UA%0A👛 Гаманець: ${wallet}`;
             window.open(`https://t.me/uatokenkrypta?text=${text}`, '_blank');
         }
 
@@ -148,6 +156,7 @@
         }
 
         function arenaSweep() {
+            let clearedRows = 0;
             outer: for (let y = arena.length - 1; y > 0; --y) {
                 for (let x = 0; x < arena[y].length; ++x) {
                     if (arena[y][x] === 0) continue outer;
@@ -155,6 +164,12 @@
                 const row = arena.splice(y, 1)[0].fill(0);
                 arena.unshift(row);
                 player.score += 10;
+                clearedRows++;
+            }
+            if (clearedRows > 0) {
+                // Додаємо нагороду UA за кожну зачищену лінію
+                userUaBalance += clearedRows * 50;
+                updateUaDisplay();
             }
             updateScore();
         }
@@ -242,8 +257,31 @@
         setInterval(updateBalance, 5000);
 
         function toggleSound() { document.getElementById('soundBtn').innerText = document.getElementById('soundBtn').innerText === '🔊' ? '🔈' : '🔊'; }
-        function showRules() { alert('200 очок - розблокування. 400 очок - виплата!'); }
-        function payAndContinue() { isVip = true; isPaused = false; document.getElementById('unlockBox').style.display = 'none'; }
+        function showRules() { alert('Збирайте очки, зачищайте лінії для нарахування UA та переходьте на нові рівні!'); }
+        
+        async function payAndContinue() {
+            // Приклад реальної транзакції через TonConnect (якщо підключений гаманець)
+            if (tonConnectUI.connected) {
+                const transaction = {
+                    validUntil: Math.floor(now = Date.now() / 1000) + 360,
+                    messages: [
+                        {
+                            address: "EQD__________________________________________000", // Замініть на свою адресу гаманця
+                            amount: "10000000" // 0.01 TON в нанотонсах
+                        }
+                    ]
+                };
+                try {
+                    await tonConnectUI.sendTransaction(transaction);
+                } catch (e) {
+                    console.log("Транзакція скасована або помилка", e);
+                    return;
+                }
+            }
+            isVip = true; 
+            isPaused = false; 
+            document.getElementById('unlockBox').style.display = 'none';
+        }
 
         playerReset();
         update();
