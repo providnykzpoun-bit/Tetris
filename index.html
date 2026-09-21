@@ -6,10 +6,10 @@
     <title>UA Token Mining</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- TonConnect UI CDN -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- TON Connect UI SDK -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         :root {
             --bg-color: #0c0c0e;
@@ -102,30 +102,10 @@
         .username {
             font-weight: 600;
             font-size: 15px;
-            max-width: 120px;
+            max-width: 150px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        .wallet-status-badge {
-            background: rgba(22, 22, 26, 0.9);
-            border: 1px solid var(--gold-primary);
-            border-radius: 12px;
-            padding: 6px 12px;
-            text-align: right;
-            cursor: pointer;
-            box-shadow: 0 0 8px rgba(243, 186, 47, 0.2);
-        }
-
-        .wallet-status-text {
-            font-size: 11px;
-            font-weight: bold;
-            color: #ff4d4d;
-        }
-
-        .wallet-status-text.connected {
-            color: var(--green-accent);
         }
 
         .assets-card {
@@ -360,6 +340,13 @@
         .action-chip:active {
             background: rgba(243, 186, 47, 0.3);
         }
+
+        #ton-connect-button {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -371,13 +358,8 @@
                 <div class="avatar" id="user-avatar">М</div>
                 <div>
                     <div class="username" id="user-name">Михайло 🐝</div>
-                    <div style="font-size: 11px; color: var(--gold-primary); font-weight: 600;" id="user-lvl">Засновник 👑</div>
+                    <div style="font-size: 11px; color: var(--gold-primary); font-weight: 600;">Засновник 👑</div>
                 </div>
-            </div>
-            <!-- Кнопка гаманця -->
-            <div class="wallet-status-badge" onclick="openWalletModal()">
-                <div style="font-size: 9px; color: var(--text-secondary);">TON Гаманець</div>
-                <div class="wallet-status-text" id="wallet-status-text">Підключити</div>
             </div>
         </header>
 
@@ -458,10 +440,15 @@
         <!-- VIEW 5: PROFILE -->
         <div id="view-profile" class="view-content">
             <div class="section-title">Профіль засновника</div>
-            <div class="placeholder-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div class="placeholder-card" style="flex-direction: column; align-items: flex-start; gap: 8px; width: 100%;">
                 <p>Статус: <b style="color: var(--green-accent);">Активний засновник UA Token</b></p>
                 <p>ID у мережі: <b id="profile-id-text">tg_leslav</b></p>
-                <p>Пул STON.fi: <b style="color: var(--gold-primary);">Підключено</b></p>
+                <p>Статус гаманця: <b id="wallet-status-text" style="color: var(--text-secondary);">Не підключено</b></p>
+                
+                <div style="width: 100%; margin-top: 10px;">
+                    <!-- Контейнер для кнопки TON Connect -->
+                    <div id="ton-connect-button"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -493,45 +480,6 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-
-        // Повністю автономний маніфест через Data URI — жодних помилок 404 та каченят
-        const manifestData = {
-            url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
-            name: "UA Token Mining",
-            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
-        };
-        const manifestJson = JSON.stringify(manifestData);
-        const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
-
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: manifestUrl
-        });
-
-        tonConnectUI.onStatusChange(wallet => {
-            const statusText = document.getElementById('wallet-status-text');
-            if (wallet) {
-                const address = wallet.account.address;
-                const shortAddr = address.slice(0, 4) + '...' + address.slice(-4);
-                statusText.innerText = shortAddr;
-                statusText.classList.add('connected');
-                supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
-            } else {
-                statusText.innerText = 'Підключити';
-                statusText.classList.remove('connected');
-            }
-        });
-
-        async function openWalletModal() {
-            try {
-                if (tonConnectUI.connected) {
-                    await tonConnectUI.disconnect();
-                } else {
-                    await tonConnectUI.openModal();
-                }
-            } catch (error) {
-                console.error("TonConnect error:", error);
-            }
-        }
 
         const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
@@ -569,12 +517,46 @@
             if (data) {
                 totalAssets = parseFloat(data.balance);
                 updateUI();
+                if (data.wallet) {
+                    document.getElementById('wallet-status-text').innerHTML = `<span style="color: var(--green-accent);">${data.wallet.slice(0, 4)}...${data.wallet.slice(-4)}</span>`;
+                }
             } else {
                 await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
             }
         }
 
         loadUserData();
+
+        // Ініціалізація TON Connect UI
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-connect/docs/main/public/tonconnect-manifest.json', // Замініть на свій реальний манифест-файл при деплої
+            buttonRootId: 'ton-connect-button'
+        });
+
+        // Відстеження зміни статусу підключення гаманця
+        tonConnectUI.onStatusChange(async (wallet) => {
+            if (wallet) {
+                // Гаманець успішно підключено
+                const rawAddress = wallet.account.address;
+                // Конвертуємо адрес у зручний друкований формат (user-friendly)
+                const userFriendlyAddress = tonConnectUI.wallet.account.address; 
+                
+                document.getElementById('wallet-status-text').innerHTML = `<span style="color: var(--green-accent);">${userFriendlyAddress.slice(0, 4)}...${userFriendlyAddress.slice(-4)}</span>`;
+                
+                // Зберігаємо адресу у базу даних Supabase
+                await supabaseClient
+                    .from('users')
+                    .update({ wallet: userFriendlyAddress })
+                    .eq('id', userId);
+            } else {
+                // Гаманець відключено
+                document.getElementById('wallet-status-text').innerHTML = `<b style="color: var(--text-secondary);">Не підключено</b>`;
+                await supabaseClient
+                    .from('users')
+                    .update({ wallet: null })
+                    .eq('id', userId);
+            }
+        });
 
         function updateUI() {
             document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
