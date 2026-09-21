@@ -2,366 +2,662 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UA TETRIS 🗿</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UA Token Mining</title>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- TonConnect UI CDN -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; margin: 0; padding: 5px; touch-action: none; overflow: hidden; height: 100vh; }
-        
-        /* Виправляємо контейнер кнопки, щоб вона завжди відображалась і не пропадала */
-        #ton-connect { margin-bottom: 6px; min-height: 45px; width: 100%; display: flex; justify-content: center; z-index: 100; }
-        
-        .top-link-btn { width: 280px; background: #ffd700; color: #000; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-align: center; display: block; border: none; cursor: pointer; }
+        :root {
+            --bg-color: #0c0c0e;
+            --card-bg: #16161a;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --gold-primary: #f3ba2f;
+            --gold-gradient: linear-gradient(135deg, #f3ba2f 0%, #d49811 100%);
+            --text-main: #ffffff;
+            --text-secondary: #8b8b93;
+            --green-accent: #00ff88;
+        }
 
-        .info-row { display: flex; gap: 8px; width: 280px; margin-bottom: 6px; }
-        .info-item { flex: 1; background: #1a1a1a; border: 1px solid #ffd700; border-radius: 8px; padding: 4px 2px; text-align: center; }
-        .info-label { font-size: 8px; color: #ffd700; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .info-value { font-size: 14px; font-weight: bold; color: #ffd700; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
 
-        #winButton { display: none; width: 280px; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-bottom: 6px; text-align: center; background: #28a745; color: white; border: none; cursor: pointer; animation: pulse 1.5s infinite; z-index: 101; box-sizing: border-box; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-        .score-panel { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-        .side-btn { background: #333; border: 1px solid #444; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; user-select: none; }
-        .stats-row { display: flex; gap: 4px; }
-        .stat-box { background: #222; padding: 4px; border-radius: 6px; border: 1px solid #333; min-width: 50px; text-align: center; }
-        .stat-label { font-size: 7px; color: #aaa; text-transform: uppercase; }
-        .stat-value { font-size: 14px; font-weight: bold; color: #00d4ff; }
-        
-        .next-box { background: #222; border: 1px solid #333; border-radius: 6px; width: 45px; height: 36px; display: flex; align-items: center; justify-content: center; position: relative; }
-        #nextCanvas { width: 32px; height: 32px; display: block; }
+        body::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(243, 186, 47, 0.18) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
 
-        canvas#tetris { border: 2px solid #333; background: #000; width: 200px; height: 340px; border-radius: 8px; display: block; }
-        
-        .controls { display: flex; gap: 6px; margin-top: 8px; }
-        .btn { background: #333; border: 1px solid #444; color: white; width: 50px; height: 50px; border-radius: 12px; font-size: 18px; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
-        .btn-drop { background: #1d3557; border-color: #457b9d; }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            z-index: 1;
+            padding-bottom: 90px;
+        }
 
-        .overlay { display: none; background: rgba(0,0,0,0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .content { background: #1a1a1a; padding: 20px; border-radius: 20px; text-align: center; border: 2px solid #ffd700; max-width: 280px; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            min-height: 48px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gold-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(243, 186, 47, 0.3);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 15px;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wallet-status-badge {
+            background: rgba(22, 22, 26, 0.9);
+            border: 1px solid var(--gold-primary);
+            border-radius: 12px;
+            padding: 6px 12px;
+            text-align: right;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(243, 186, 47, 0.2);
+        }
+
+        .wallet-status-text {
+            font-size: 11px;
+            font-weight: bold;
+            color: #ff4d4d;
+        }
+
+        .wallet-status-text.connected {
+            color: var(--green-accent);
+        }
+
+        .assets-card {
+            background: linear-gradient(145deg, rgba(22, 22, 26, 0.9), rgba(30, 30, 38, 0.7));
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 22px;
+            text-align: center;
+            margin-bottom: 15px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .assets-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .assets-amount {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            letter-spacing: -0.5px;
+        }
+
+        .assets-amount span {
+            color: var(--gold-primary);
+            text-shadow: 0 0 20px rgba(243, 186, 47, 0.2);
+        }
+
+        .wallet-breakdown {
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+            padding-top: 12px;
+        }
+
+        .wallet-breakdown b {
+            color: var(--text-main);
+        }
+
+        .mining-display {
+            text-align: center;
+            margin-bottom: 5px;
+            height: 30px;
+        }
+
+        .increment-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--green-accent);
+            text-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .coin-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 25px 0;
+            position: relative;
+        }
+
+        .coin {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffe680 0%, #f3ba2f 55%, #9c7305 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 40px rgba(243, 186, 47, 0.35), inset 0 0 20px rgba(255, 255, 255, 0.6);
+            border: 4px solid #fff2b2;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .coin:active {
+            transform: scale(0.92);
+        }
+
+        .floating-number {
+            position: absolute;
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--green-accent);
+            pointer-events: none;
+            animation: floatToAssets 0.75s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            z-index: 50;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        @keyframes floatToAssets {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-240px) scale(0.7);
+            }
+        }
+
+        .claim-btn {
+            width: 100%;
+            background: var(--gold-gradient);
+            color: #111;
+            font-size: 17px;
+            font-weight: 700;
+            padding: 16px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(243, 186, 47, 0.3);
+            transition: all 0.2s;
+            margin-top: auto;
+            letter-spacing: 0.5px;
+        }
+
+        .claim-btn:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+            box-shadow: 0 2px 10px rgba(243, 186, 47, 0.2);
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: rgba(18, 18, 22, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 14px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--gold-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            fill: currentColor;
+        }
+
+        .view-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+
+        .view-content.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .placeholder-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .placeholder-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .placeholder-card b {
+            color: var(--gold-primary);
+        }
+
+        .action-chip {
+            background: rgba(243, 186, 47, 0.15);
+            color: var(--gold-primary);
+            border: 1px solid rgba(243, 186, 47, 0.3);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-chip:active {
+            background: rgba(243, 186, 47, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Змінено id на стандартний для автоматичного рендерингу TonConnect -->
-    <div id="ton-connect"></div>
-    <a href="defender.html" class="top-link-btn">🛡️ UA DEFENDER — ЗАХИСТИ КОРДОН!</a>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">М</div>
+                <div>
+                    <div class="username" id="user-name">Михайло 🐝</div>
+                    <div style="font-size: 11px; color: var(--gold-primary); font-weight: 600;" id="user-lvl">Засновник 👑</div>
+                </div>
+            </div>
+            <!-- Кнопка гаманця -->
+            <div class="wallet-status-badge" onclick="openWalletModal()">
+                <div style="font-size: 9px; color: var(--text-secondary);">TON Гаманець</div>
+                <div class="wallet-status-text" id="wallet-status-text">Підключити</div>
+            </div>
+        </header>
 
-    <div class="info-row">
-        <div class="info-item" style="flex: 2;">
-            <span class="info-label">Доступно до виплати</span>
-            <div id="balanceValue" class="info-value">2000 UA</div>
+        <!-- VIEW 1: MINE -->
+        <div id="view-mine" class="view-content active">
+            <div class="assets-card" id="assets-card-box">
+                <div class="assets-title">Баланс активу</div>
+                <div class="assets-amount"><span id="total-assets">171.1932</span> UA</div>
+                <div class="wallet-breakdown">
+                    <div>Швидкість: <b style="color: var(--green-accent);">+0.0001/с</b></div>
+                    <div>Пул: <b id="pool-assets">171.1932 UA</b></div>
+                </div>
+            </div>
+
+            <div class="mining-display">
+                <div class="increment-value" id="increment-display">+0.0000</div>
+            </div>
+
+            <div class="coin-container" id="coin-parent">
+                <div class="coin" id="mine-coin" onclick="claimCoins()">
+                    <svg viewBox="0 0 500 500" width="105" height="105" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 120 V380 C100 380 100 420 140 420 C180 420 200 390 220 360 L290 240 C310 210 340 180 380 180 C420 180 420 210 420 240 V380" 
+                              fill="none" stroke="#22211c" stroke-width="55" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M285 245 H420" fill="none" stroke="#22211c" stroke-width="45" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <button class="claim-btn" onclick="claimCoins()">ЗБРАТИ МОНЕТИ (CLAIM)</button>
+        </div>
+
+        <!-- VIEW 2: TASKS -->
+        <div id="view-tasks" class="view-content">
+            <div class="section-title">Щоденні завдання</div>
+            <div class="placeholder-card">
+                <div>
+                    <h4 style="font-size: 15px; margin-bottom: 3px;">Підписка на Telegram</h4>
+                    <p>Отримайте бонус за активність</p>
+                </div>
+                <button class="action-chip" onclick="alert('Завдання перевірено!')">+5.0 UA</button>
+            </div>
+            <div class="placeholder-card">
+                <div>
+                    <h4 style="font-size: 15px; margin-bottom: 3px;">Запросити друга</h4>
+                    <p>Роздайте реферальне посилання</p>
+                </div>
+                <button class="action-chip" onclick="alert('Посилання скопійовано!')">+10.0 UA</button>
+            </div>
+        </div>
+
+        <!-- VIEW 3: MINERS -->
+        <div id="view-miners" class="view-content">
+            <div class="section-title">Апгрейд майнінгу</div>
+            <div class="placeholder-card" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <div>
+                    <h4 style="font-size: 16px; margin-bottom: 4px;">Квантовий прискорювач ⚡</h4>
+                    <p>Збільшує генерацію монет на 50%</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 5px;">
+                    <b>Ціна: 50.0 UA</b>
+                    <button class="action-chip" onclick="alert('Недостатньо коштів')">Купити</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: FRIENDS -->
+        <div id="view-friends" class="view-content">
+            <div class="section-title">Реферальна програма</div>
+            <div class="placeholder-card" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                <div>
+                    <h4 style="font-size: 16px; margin-bottom: 4px;">Запрошуйте друзів</h4>
+                    <p>Отримуйте 10% від їхнього майнінгу на свій баланс автоматично.</p>
+                </div>
+                <button class="claim-btn" style="padding: 12px; font-size: 15px;" onclick="alert('Посилання створено!')">Поділитися посиланням</button>
+            </div>
+        </div>
+
+        <!-- VIEW 5: PROFILE -->
+        <div id="view-profile" class="view-content">
+            <div class="section-title">Профіль засновника</div>
+            <div class="placeholder-card" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <p>Статус: <b style="color: var(--green-accent);">Активний засновник UA Token</b></p>
+                <p>ID у мережі: <b id="profile-id-text">tg_leslav</b></p>
+                <p>Пул STON.fi: <b style="color: var(--gold-primary);">Підключено</b></p>
+            </div>
         </div>
     </div>
 
-    <button id="winButton" onclick="withdrawUA()">💰 ВИВЕСТИ 2000 UA</button>
-
-    <div class="score-panel">
-        <div class="side-btn" onclick="toggleSound()" id="soundBtn">🔊</div>
-        <div class="stats-row">
-            <div class="stat-box"><div class="stat-label">Очки</div><div id="score" class="stat-value">0</div></div>
-            <div class="stat-box"><div class="stat-label">Рівень</div><div id="level" class="stat-value">1</div></div>
-        </div>
-        <div class="next-box" title="Наступна фігура">
-            <canvas id="nextCanvas" width="40" height="40"></canvas>
-        </div>
-        <div class="side-btn" onclick="showRules()">?</div>
-    </div>
-
-    <canvas id="tetris" width="240" height="400"></canvas>
-
-    <div class="controls">
-        <div class="btn" onpointerdown="playerMove(-1)">⬅️</div>
-        <div class="btn" onpointerdown="playerRotate()">🔄</div>
-        <div class="btn btn-drop" onpointerdown="playerHardDrop()">⚡</div>
-        <div class="btn" onpointerdown="playerDrop()">⬇️</div>
-        <div class="btn" onpointerdown="playerMove(1)">➡️</div>
-    </div>
-
-    <div id="unlockBox" class="overlay">
-        <div class="content">
-            <h2 style="color:#ffd700">ПЕРШИЙ РІВЕНЬ ПРОЙДЕНО!</h2>
-            <p>Набрано 20 очок. Розблокуйте фінальний етап для виплати 2000 UA!</p>
-            <button class="top-link-btn" onclick="payAndContinue()">🔓 РОЗБЛОКУВАТИ (0.01 TON)</button>
-        </div>
-    </div>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <button class="nav-item active" onclick="switchView('mine', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Mine
+        </button>
+        <button class="nav-item" onclick="switchView('tasks', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Tasks
+        </button>
+        <button class="nav-item" onclick="switchView('miners', this)">
+            <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+            Miners
+        </button>
+        <button class="nav-item" onclick="switchView('friends', this)">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Friends
+        </button>
+        <button class="nav-item" onclick="switchView('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Profile
+        </button>
+    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect через Data URI, щоб повністю уникнути помилки маніфесту (жовтого каченяти)
+        // Повністю автономний маніфест через Data URI — жодних помилок 404 та каченят
         const manifestData = {
             url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
-            name: "UA TETRIS",
+            name: "UA Token Mining",
             iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
         };
         const manifestJson = JSON.stringify(manifestData);
         const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
 
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: manifestUrl,
-            buttonRootId: 'ton-connect'
+            manifestUrl: manifestUrl
         });
 
-        let soundEnabled = true;
-        let audioCtx = null;
-        function playTone(freq, type, duration) {
-            if (!soundEnabled) return;
+        tonConnectUI.onStatusChange(wallet => {
+            const statusText = document.getElementById('wallet-status-text');
+            if (wallet) {
+                const address = wallet.account.address;
+                const shortAddr = address.slice(0, 4) + '...' + address.slice(-4);
+                statusText.innerText = shortAddr;
+                statusText.classList.add('connected');
+                supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
+            } else {
+                statusText.innerText = 'Підключити';
+                statusText.classList.remove('connected');
+            }
+        });
+
+        async function openWalletModal() {
             try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
-        }
-
-        function withdrawUA() {
-            const wallet = tonConnectUI.account ? tonConnectUI.account.address : "Не підключено";
-            const text = `ЗАЯВКА НА ВИПЛАТУ:%0A🎮 Гра: UA TETRIS 🗿%0A💰 Сума: 2000 UA%0A👛 Гаманець: ${wallet}`;
-            
-            window.open(`https://t.me/tokenpist_bot?text=${text}`, '_blank');
-
-            document.getElementById('balanceValue').innerText = '0 UA';
-            document.getElementById('winButton').style.display = 'none';
-        }
-
-        const canvas = document.getElementById('tetris');
-        const context = canvas.getContext('2d');
-        context.scale(20, 20);
-
-        const nextCanvas = document.getElementById('nextCanvas');
-        const nextCtx = nextCanvas.getContext('2d');
-        nextCtx.scale(8, 8);
-
-        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF', '#0055FF'];
-        const arena = Array.from({length: 20}, () => new Array(12).fill(0));
-        
-        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
-        let nextPieceMatrix = null;
-
-        let isVip = false, isPaused = false, dropInterval = 800, dropCounter = 0, lastTime = 0;
-
-        function createPiece(type) {
-            if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
-            if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
-            if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
-            if (type === 'O') return [[4,4],[4,4]];
-            if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
-            if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
-            if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
-            if (type === 'UA') return [[8,8],[8,8]];
-        }
-
-        function getRandomPiece() {
-            const pieces = 'ILJOTSZ';
-            let chosen = pieces[Math.floor(Math.random() * pieces.length)];
-            if (Math.random() < 0.15) chosen = 'UA';
-            return createPiece(chosen);
-        }
-
-        function drawMatrix(mat, offset, ctx = context) {
-            mat.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        ctx.fillStyle = colors[value];
-                        ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
-                    }
-                });
-            });
-        }
-
-        function drawNext() {
-            nextCtx.fillStyle = '#222';
-            nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-            if (nextPieceMatrix) {
-                const offsetX = (5 - nextPieceMatrix[0].length) / 2;
-                const offsetY = (5 - nextPieceMatrix.length) / 2;
-                drawMatrix(nextPieceMatrix, {x: offsetX, y: offsetY}, nextCtx);
-            }
-        }
-
-        function draw() {
-            context.fillStyle = '#000';
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            drawMatrix(arena, {x: 0, y: 0});
-            drawMatrix(player.matrix, player.pos);
-        }
-
-        function collide(arena, player) {
-            const [m, o] = [player.matrix, player.pos];
-            for (let y = 0; y < m.length; ++y) {
-                for (let x = 0; x < m[y].length; ++x) {
-                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                if (tonConnectUI.connected) {
+                    await tonConnectUI.disconnect();
+                } else {
+                    await tonConnectUI.openModal();
                 }
-            }
-            return false;
-        }
-
-        function merge(arena, player) {
-            player.matrix.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
-                });
-            });
-            playTone(150, 'square', 0.1);
-        }
-
-        function arenaSweep() {
-            let rowCount = 0;
-            outer: for (let y = arena.length - 1; y > 0; --y) {
-                for (let x = 0; x < arena[y].length; ++x) {
-                    if (arena[y][x] === 0) continue outer;
-                }
-                const row = arena.splice(y, 1)[0].fill(0);
-                arena.unshift(row);
-                rowCount++;
-                y++;
-            }
-            if (rowCount > 0) {
-                player.score += rowCount * 10;
-                playTone(600, 'sine', 0.2);
-                updateScore();
+            } catch (error) {
+                console.error("TonConnect error:", error);
             }
         }
 
-        function updateScore() {
-            document.getElementById('score').innerText = player.score;
-            const lvl = Math.floor(player.score / 20) + 1;
-            document.getElementById('level').innerText = lvl;
+        const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            if (player.score >= 20 && !isVip) {
-                isPaused = true;
-                document.getElementById('unlockBox').style.display = 'flex';
-                playTone(800, 'triangle', 0.4);
-            }
-            if (player.score >= 40 && isVip && document.getElementById('balanceValue').innerText !== '0 UA') {
-                document.getElementById('winButton').style.display = 'block';
-            }
-        }
+        let userId = 'user_leslav';
+        let userName = 'Михайло 🐝';
 
-        function playerReset() {
-            if (!nextPieceMatrix) {
-                nextPieceMatrix = getRandomPiece();
-            }
-            player.matrix = nextPieceMatrix;
-            nextPieceMatrix = getRandomPiece();
-            drawNext();
-
-            player.pos.y = 0;
-            player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            userId = 'tg_' + tgUser.id;
+            userName = tgUser.first_name + (tgUser.last_name ? ' ' + tgUser.last_name : '');
             
-            if (collide(arena, player)) {
-                arena.forEach(row => row.fill(0));
-                player.score = 0;
-                playTone(100, 'sawtooth', 0.5);
-                updateScore();
+            if (tgUser.photo_url) {
+                document.getElementById('user-avatar').innerHTML = `<img src="${tgUser.photo_url}" alt="Avatar">`;
+            } else {
+                document.getElementById('user-avatar').innerText = tgUser.first_name.charAt(0);
             }
         }
 
-        function playerDrop() {
-            player.pos.y++;
-            if (collide(arena, player)) {
-                player.pos.y--;
-                merge(arena, player);
-                playerReset();
-                arenaSweep();
-            }
-            dropCounter = 0;
-        }
+        document.getElementById('user-name').innerText = userName;
+        document.getElementById('profile-id-text').innerText = userId;
 
-        function playerHardDrop() {
-            if (isPaused) return;
-            while (!collide(arena, player)) {
-                player.pos.y++;
-            }
-            player.pos.y--;
-            merge(arena, player);
-            playerReset();
-            arenaSweep();
-            dropCounter = 0;
-            playTone(400, 'square', 0.15);
-        }
+        let totalAssets = 171.1932;
+        let pendingGreen = 0.0000; 
+        const miningSpeed = 0.0001;
 
-        function playerMove(dir) {
-            if (isPaused) return;
-            player.pos.x += dir;
-            if (collide(arena, player)) player.pos.x -= dir;
-            else playTone(300, 'sine', 0.03);
-        }
+        async function loadUserData() {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('balance, wallet')
+                .eq('id', userId)
+                .single();
 
-        function playerRotate() {
-            if (isPaused) return;
-            const pos = player.pos.x;
-            let offset = 1;
-            const matrix = player.matrix;
-            for (let y = 0; y < matrix.length; ++y) {
-                for (let x = 0; x < y; ++x) [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-            }
-            matrix.forEach(row => row.reverse());
-            while (collide(arena, player)) {
-                player.pos.x += offset;
-                offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) { player.pos.x = pos; return; }
-            }
-            playTone(450, 'sine', 0.05);
-        }
-
-        function update(time = 0) {
-            if (!isPaused) {
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                dropCounter += deltaTime;
-                if (dropCounter > dropInterval) playerDrop();
-                draw();
-            }
-            requestAnimationFrame(update);
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔈';
-        }
-
-        function showRules() { 
-            alert('Збирайте очки! На 20 очках — розблокування, на 40 — виплата 2000 UA!'); 
-        }
-
-        async function payAndContinue() {
-            if (!tonConnectUI.connected) {
-                alert('Будь ласка, підключіть гаманець зверху!');
-                return;
-            }
-
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 300,
-                messages: [
-                    {
-                        address: "UQDXq1iAqu88tVRG62_k03kAXELu_1gzRBMye-VZoFRIRtWw",
-                        amount: "10000000" // 0.01 TON
-                    }
-                ]
-            };
-
-            try {
-                await tonConnectUI.sendTransaction(transaction);
-                isVip = true; 
-                isPaused = false; 
-                document.getElementById('unlockBox').style.display = 'none';
-            } catch (e) {
-                console.log("Транзакція скасована", e);
+            if (data) {
+                totalAssets = parseFloat(data.balance);
+                updateUI();
+            } else {
+                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
             }
         }
 
-        playerReset();
-        update();
+        loadUserData();
+
+        function updateUI() {
+            document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
+            document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
+        }
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        let lastClickTime = 0;
+        function playClaimSound() {
+            const now = Date.now();
+            if (now - lastClickTime < 80) return;
+            lastClickTime = now;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); 
+            
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        setInterval(() => {
+            pendingGreen += miningSpeed;
+            document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
+        }, 1000);
+
+        async function claimCoins() {
+            if (pendingGreen < 0.0001) return;
+
+            playClaimSound(); 
+
+            totalAssets += pendingGreen;
+            updateUI();
+
+            showFlyingNumber(pendingGreen);
+
+            pendingGreen = 0.0000;
+            document.getElementById('increment-display').innerText = '+0.0000';
+
+            await supabaseClient
+                .from('users')
+                .update({ balance: totalAssets })
+                .eq('id', userId);
+
+            const coin = document.getElementById('mine-coin');
+            coin.style.transform = 'scale(0.88)';
+            setTimeout(() => {
+                coin.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        function showFlyingNumber(amount) {
+            const container = document.getElementById('coin-parent');
+            const flyer = document.createElement('div');
+            flyer.className = 'floating-number';
+            flyer.innerText = '+' + amount.toFixed(4);
+            
+            container.appendChild(flyer);
+            setTimeout(() => {
+                flyer.remove();
+            }, 750);
+        }
+
+        function switchView(viewId, element) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
     </script>
 </body>
 </html>
